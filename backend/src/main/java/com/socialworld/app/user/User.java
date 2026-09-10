@@ -1,5 +1,6 @@
 package com.socialworld.app.user;
 
+import com.socialworld.app.intention.Intention;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -51,6 +52,10 @@ public class User {
 
     @Column(length = 30)
     private String gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "current_intention", length = 30)
+    private Intention currentIntention;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

@@ -23,7 +23,11 @@ public enum ErrorCode {
     // Registration
     USERNAME_TAKEN(HttpStatus.CONFLICT, "Username is already taken."),
     EMAIL_TAKEN(HttpStatus.CONFLICT, "Email is already registered."),
-    UNDERAGE(HttpStatus.UNPROCESSABLE_ENTITY, "You must be at least 18 years old.");
+    UNDERAGE(HttpStatus.UNPROCESSABLE_ENTITY, "You must be at least 18 years old."),
+
+    // Languages
+    LANGUAGE_ALREADY_ADDED(HttpStatus.CONFLICT, "This language is already on your profile."),
+    LANGUAGE_LIMIT_REACHED(HttpStatus.UNPROCESSABLE_ENTITY, "You cannot add more languages.");
 
     private final HttpStatus status;
     private final String defaultMessage;
