@@ -190,6 +190,33 @@ export interface SendGiftResponse {
   message: Message;
 }
 
+export type ConnectionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED';
+
+export interface Connection {
+  id: string;
+  partnerId: string;
+  partnerUsername: string;
+  partnerOnline: boolean;
+  partnerAvatar: UserAvatar;
+  status: ConnectionStatus;
+  incoming: boolean;
+  createdAt: string;
+}
+
+export interface DiscoveredUser {
+  id: string;
+  username: string;
+  age: number;
+  countryCode: string | null;
+  bio: string | null;
+  currentIntention: Intention | null;
+  languages: UserLanguage[];
+  avatar: UserAvatar;
+  online: boolean;
+  lastSeenAt: string | null;
+  score: number;
+}
+
 export interface AddLanguageRequest {
   languageCode: string;
   type: LanguageType;

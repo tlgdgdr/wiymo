@@ -40,7 +40,10 @@ public enum ErrorCode {
     SELF_ACTION_NOT_ALLOWED(HttpStatus.UNPROCESSABLE_ENTITY, "You cannot do this to yourself."),
 
     // Wallet / gifts
-    INSUFFICIENT_BALANCE(HttpStatus.UNPROCESSABLE_ENTITY, "Not enough coins.");
+    INSUFFICIENT_BALANCE(HttpStatus.UNPROCESSABLE_ENTITY, "Not enough coins."),
+
+    // Connections
+    CONNECTION_ALREADY_EXISTS(HttpStatus.CONFLICT, "A connection with this user already exists.");
 
     private final HttpStatus status;
     private final String defaultMessage;

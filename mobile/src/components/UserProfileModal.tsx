@@ -1,9 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getAvatarAssets } from '@/api/avatar';
+import { ApiRequestError } from '@/api/client';
+import { requestConnection } from '@/api/connections';
 import { getPublicProfile } from '@/api/users';
 import { Avatar } from '@/components/Avatar';
 import { intentionEmoji, intentionLabel } from '@/constants/intentions';
@@ -20,6 +22,13 @@ interface Props {
  */
 export function UserProfileModal({ userId, onClose }: Props) {
   const { data: assets } = useQuery({ queryKey: ['avatarAssets'], queryFn: getAvatarAssets });
+  const [connectState, setConnectState] = useState<string | null>(null);
+  const connectMutation = useMutation({
+    mutationFn: requestConnection,
+    onSuccess: () => setConnectState('Request sent ✓'),
+    onError: (e) =>
+      setConnectState(e instanceof ApiRequestError ? e.message : 'Could not send request.'),
+  });
   const { data: profile } = useQuery({
     queryKey: ['publicProfile', userId],
     queryFn: () => getPublicProfile(userId as string),
@@ -85,6 +94,14 @@ export function UserProfileModal({ userId, onClose }: Props) {
             </Pressable>
           </View>
 
+          <Pressable
+            style={[styles.action, styles.connectAction]}
+            onPress={() => userId && !connectMutation.isPending && connectMutation.mutate(userId)}
+          >
+            <Text style={styles.actionText}>🤝 Connect</Text>
+            {connectState ? <Text style={styles.actionSoon}>{connectState}</Text> : null}
+          </Pressable>
+
           <Pressable onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeText}>Close</Text>
           </Pressable>
@@ -140,6 +157,7 @@ const styles = StyleSheet.create({
   },
   languageChipText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
+  connectAction: { marginTop: spacing.sm },
   action: {
     flex: 1,
     backgroundColor: colors.surfaceLight,

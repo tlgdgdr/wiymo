@@ -1,15 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getAvatarAssets } from '@/api/avatar';
+import { discoverUsers } from '@/api/discovery';
 import { getMyWallet } from '@/api/gifts';
 import { listRooms } from '@/api/rooms';
 import type { Intention, Me } from '@/api/types';
 import { getMe, updateIntention } from '@/api/users';
 import { Avatar } from '@/components/Avatar';
+import { UserProfileModal } from '@/components/UserProfileModal';
 import { INTENTIONS } from '@/constants/intentions';
 import { colors, spacing } from '@/theme';
 
@@ -23,6 +25,11 @@ export default function HomeScreen() {
     queryKey: ['recommendations', 'rooms', current],
     queryFn: () => listRooms(current),
   });
+  const { data: people } = useQuery({
+    queryKey: ['recommendations', 'people', current],
+    queryFn: () => discoverUsers({ intention: current ?? undefined }),
+  });
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const intentionMutation = useMutation({
     mutationFn: updateIntention,
@@ -115,11 +122,43 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        <Text style={[styles.sectionTitle, { marginTop: spacing.lg, marginBottom: spacing.sm }]}>Online People</Text>
-        <View style={styles.placeholderBox}>
-          <Text style={styles.placeholderText}>Discovery arrives soon 👋</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>People For You</Text>
+          <Link href="/(app)/connections" style={styles.sectionLink}>
+            Connections
+          </Link>
         </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.peopleRow}>
+            {(people ?? []).map((person) => (
+              <Pressable
+                key={person.id}
+                onPress={() => setSelectedUserId(person.id)}
+                style={({ pressed }) => [styles.personCard, pressed && styles.cardPressed]}
+              >
+                <Avatar
+                  avatar={person.avatar}
+                  assets={assets}
+                  size={56}
+                  fallbackInitial={person.username}
+                />
+                {person.online ? <View style={styles.personOnlineDot} /> : null}
+                <Text style={styles.personName} numberOfLines={1}>
+                  {person.username}
+                </Text>
+                <Text style={styles.personAge}>{person.age}</Text>
+              </Pressable>
+            ))}
+            {people && people.length === 0 ? (
+              <View style={styles.placeholderBox}>
+                <Text style={styles.placeholderText}>No one around right now.</Text>
+              </View>
+            ) : null}
+          </View>
+        </ScrollView>
       </ScrollView>
+
+      <UserProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
     </SafeAreaView>
   );
 }
@@ -190,6 +229,25 @@ const styles = StyleSheet.create({
   roomRowName: { color: colors.text, fontSize: 15, fontWeight: '700' },
   roomRowDescription: { color: colors.textMuted, fontSize: 12, marginTop: 1 },
   roomRowPopulation: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
+  peopleRow: { flexDirection: 'row', gap: spacing.sm },
+  personCard: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: spacing.sm,
+    width: 88,
+  },
+  personOnlineDot: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.success,
+  },
+  personName: { color: colors.text, fontSize: 12, fontWeight: '700', marginTop: spacing.xs },
+  personAge: { color: colors.textMuted, fontSize: 11 },
   placeholderBox: {
     backgroundColor: colors.surface,
     borderRadius: 16,
