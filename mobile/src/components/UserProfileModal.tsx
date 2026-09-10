@@ -73,9 +73,15 @@ export function UserProfileModal({ userId, onClose }: Props) {
             >
               <Text style={styles.actionText}>💬 Chat</Text>
             </Pressable>
-            <Pressable style={[styles.action, styles.actionDisabled]}>
+            <Pressable
+              style={styles.action}
+              onPress={() => {
+                if (!userId) return;
+                onClose();
+                router.push(`/(app)/chat/${userId}`);
+              }}
+            >
               <Text style={styles.actionText}>🎁 Gift</Text>
-              <Text style={styles.actionSoon}>soon</Text>
             </Pressable>
           </View>
 

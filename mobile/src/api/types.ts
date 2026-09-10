@@ -166,6 +166,30 @@ export interface Conversation {
   unreadCount: number;
 }
 
+export type GiftCategory = 'CLASSIC' | 'ROMANTIC' | 'FUN' | 'LUXURY';
+
+export interface Gift {
+  id: string;
+  name: string;
+  iconUrl: string;
+  animationUrl: string | null;
+  coinPrice: number;
+  category: GiftCategory;
+}
+
+export interface Wallet {
+  coinBalance: number;
+}
+
+export interface SendGiftResponse {
+  transactionId: string;
+  giftId: string;
+  giftName: string;
+  coinAmount: number;
+  newBalance: number;
+  message: Message;
+}
+
 export interface AddLanguageRequest {
   languageCode: string;
   type: LanguageType;

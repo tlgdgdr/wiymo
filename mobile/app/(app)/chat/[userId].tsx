@@ -18,6 +18,7 @@ import { getMessages, sendMessageRest } from '@/api/chat';
 import type { Message } from '@/api/types';
 import { getPublicProfile } from '@/api/users';
 import { Avatar } from '@/components/Avatar';
+import { GiftSelector } from '@/components/GiftSelector';
 import { useAuthStore } from '@/store/auth';
 import { useChatSocket } from '@/ws/useChatSocket';
 import { colors, spacing } from '@/theme';
@@ -30,6 +31,7 @@ export default function PrivateChatScreen() {
   const { sendViaSocket } = useChatSocket();
 
   const [draft, setDraft] = useState('');
+  const [giftOpen, setGiftOpen] = useState(false);
 
   const { data: assets } = useQuery({ queryKey: ['avatarAssets'], queryFn: getAvatarAssets });
   const { data: partner } = useQuery({
@@ -109,7 +111,7 @@ export default function PrivateChatScreen() {
         />
 
         <View style={styles.footer}>
-          <Pressable style={styles.giftButton}>
+          <Pressable style={styles.giftButton} onPress={() => setGiftOpen(true)}>
             <Text style={styles.giftIcon}>🎁</Text>
           </Pressable>
           <TextInput
@@ -126,6 +128,12 @@ export default function PrivateChatScreen() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+
+      <GiftSelector
+        visible={giftOpen}
+        receiverId={partnerId}
+        onClose={() => setGiftOpen(false)}
+      />
     </SafeAreaView>
   );
 }

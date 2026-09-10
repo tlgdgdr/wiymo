@@ -49,6 +49,8 @@ export function useChatSocket() {
               return [message, ...old];
             });
             void queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          } else if (parsed.type === 'gift') {
+            void queryClient.invalidateQueries({ queryKey: ['wallet'] });
           }
         } catch {
           // Ignore malformed frames.

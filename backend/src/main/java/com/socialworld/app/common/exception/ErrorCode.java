@@ -37,7 +37,10 @@ public enum ErrorCode {
     NOT_IN_ROOM(HttpStatus.CONFLICT, "You are not in this room."),
 
     // Social
-    SELF_ACTION_NOT_ALLOWED(HttpStatus.UNPROCESSABLE_ENTITY, "You cannot do this to yourself.");
+    SELF_ACTION_NOT_ALLOWED(HttpStatus.UNPROCESSABLE_ENTITY, "You cannot do this to yourself."),
+
+    // Wallet / gifts
+    INSUFFICIENT_BALANCE(HttpStatus.UNPROCESSABLE_ENTITY, "Not enough coins.");
 
     private final HttpStatus status;
     private final String defaultMessage;

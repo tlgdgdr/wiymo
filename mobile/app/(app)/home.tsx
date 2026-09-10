@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getAvatarAssets } from '@/api/avatar';
+import { getMyWallet } from '@/api/gifts';
 import { listRooms } from '@/api/rooms';
 import type { Intention, Me } from '@/api/types';
 import { getMe, updateIntention } from '@/api/users';
@@ -16,6 +17,7 @@ export default function HomeScreen() {
   const queryClient = useQueryClient();
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe });
   const { data: assets } = useQuery({ queryKey: ['avatarAssets'], queryFn: getAvatarAssets });
+  const { data: wallet } = useQuery({ queryKey: ['wallet'], queryFn: getMyWallet });
   const current = me?.currentIntention ?? null;
   const { data: recommendedRooms } = useQuery({
     queryKey: ['recommendations', 'rooms', current],
@@ -49,7 +51,7 @@ export default function HomeScreen() {
           />
           <View style={styles.headerText}>
             <Text style={styles.username}>{me?.username ?? '...'}</Text>
-            <Text style={styles.headerSub}>Ready to connect?</Text>
+            <Text style={styles.headerSub}>🪙 {wallet?.coinBalance ?? '...'}</Text>
           </View>
           <Link href="/(app)/chats" style={styles.profileLink}>
             Chats
