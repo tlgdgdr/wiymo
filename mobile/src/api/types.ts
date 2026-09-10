@@ -52,6 +52,7 @@ export interface Me {
   gender: string | null;
   currentIntention: Intention | null;
   languages: UserLanguage[];
+  avatar: UserAvatar;
 }
 
 export interface PublicProfile {
@@ -62,6 +63,7 @@ export interface PublicProfile {
   bio: string | null;
   currentIntention: Intention | null;
   languages: UserLanguage[];
+  avatar: UserAvatar;
   online: boolean;
   lastSeenAt: string | null;
 }
@@ -70,6 +72,39 @@ export interface UpdateProfileRequest {
   bio?: string;
   countryCode?: string;
   gender?: string;
+}
+
+export type AvatarCategory =
+  | 'BODY'
+  | 'BOTTOM'
+  | 'SHOES'
+  | 'TOP'
+  | 'FACE'
+  | 'EYES'
+  | 'HAIR'
+  | 'ACCESSORY';
+
+export interface AvatarAsset {
+  id: string;
+  category: AvatarCategory;
+  assetKey: string;
+  displayName: string;
+  imageUrl: string;
+  premium: boolean;
+  coinPrice: number;
+  sortOrder: number;
+}
+
+/** Asset keys per layer; null layers are unset. */
+export interface UserAvatar {
+  bodyId: string;
+  faceId: string | null;
+  eyesId: string | null;
+  hairId: string | null;
+  topId: string | null;
+  bottomId: string | null;
+  shoesId: string | null;
+  accessoryId: string | null;
 }
 
 export interface AddLanguageRequest {

@@ -1,5 +1,6 @@
 package com.socialworld.app.user.dto;
 
+import com.socialworld.app.avatar.dto.AvatarResponse;
 import com.socialworld.app.intention.Intention;
 import com.socialworld.app.language.dto.UserLanguageResponse;
 import com.socialworld.app.user.User;
@@ -18,9 +19,10 @@ public record MeResponse(
         String bio,
         String gender,
         Intention currentIntention,
-        List<UserLanguageResponse> languages
+        List<UserLanguageResponse> languages,
+        AvatarResponse avatar
 ) {
-    public static MeResponse from(User user, List<UserLanguageResponse> languages) {
+    public static MeResponse from(User user, List<UserLanguageResponse> languages, AvatarResponse avatar) {
         return new MeResponse(
                 user.getId(),
                 user.getUsername(),
@@ -30,6 +32,7 @@ public record MeResponse(
                 user.getBio(),
                 user.getGender(),
                 user.getCurrentIntention(),
-                languages);
+                languages,
+                avatar);
     }
 }

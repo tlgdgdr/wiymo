@@ -4,14 +4,17 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/Button';
+import { getAvatarAssets } from '@/api/avatar';
 import { getMe } from '@/api/users';
+import { Avatar } from '@/components/Avatar';
+import { Button } from '@/components/Button';
 import { intentionEmoji, intentionLabel } from '@/constants/intentions';
 import { useAuthStore } from '@/store/auth';
 import { colors, spacing } from '@/theme';
 
 export default function ProfileScreen() {
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe });
+  const { data: assets } = useQuery({ queryKey: ['avatarAssets'], queryFn: getAvatarAssets });
   const clearSession = useAuthStore((s) => s.clearSession);
 
   const logout = async () => {
@@ -22,10 +25,8 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.avatarCircle}>
-          <Text style={styles.avatarInitial}>
-            {(me?.username ?? '?').charAt(0).toUpperCase()}
-          </Text>
+        <View style={styles.avatarWrap}>
+          <Avatar avatar={me?.avatar} assets={assets} size={120} fallbackInitial={me?.username} />
         </View>
         <Text style={styles.username}>{me?.username ?? '...'}</Text>
         <Text style={styles.mood}>
@@ -59,6 +60,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.actions}>
+          <Button title="Edit avatar" onPress={() => router.push('/(app)/avatar-creator')} />
           <Button title="Edit profile" onPress={() => router.push('/(app)/edit-profile')} />
           <Button title="Log out" variant="ghost" onPress={() => void logout()} />
         </View>
@@ -70,17 +72,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.md, alignItems: 'stretch' },
-  avatarCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: colors.primaryDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginTop: spacing.lg,
-  },
-  avatarInitial: { color: colors.text, fontSize: 36, fontWeight: '800' },
+  avatarWrap: { alignSelf: 'center', marginTop: spacing.lg },
   username: {
     color: colors.text,
     fontSize: 24,

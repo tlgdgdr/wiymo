@@ -27,7 +27,10 @@ public enum ErrorCode {
 
     // Languages
     LANGUAGE_ALREADY_ADDED(HttpStatus.CONFLICT, "This language is already on your profile."),
-    LANGUAGE_LIMIT_REACHED(HttpStatus.UNPROCESSABLE_ENTITY, "You cannot add more languages.");
+    LANGUAGE_LIMIT_REACHED(HttpStatus.UNPROCESSABLE_ENTITY, "You cannot add more languages."),
+
+    // Avatar
+    AVATAR_ASSET_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid avatar asset selection.");
 
     private final HttpStatus status;
     private final String defaultMessage;

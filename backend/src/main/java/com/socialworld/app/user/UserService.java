@@ -1,5 +1,6 @@
 package com.socialworld.app.user;
 
+import com.socialworld.app.avatar.AvatarService;
 import com.socialworld.app.common.exception.ApiException;
 import com.socialworld.app.common.exception.ErrorCode;
 import com.socialworld.app.intention.Intention;
@@ -19,11 +20,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserLanguageService userLanguageService;
+    private final AvatarService avatarService;
 
     @Transactional(readOnly = true)
     public MeResponse getMe(UUID userId) {
         User user = requireUser(userId);
-        return MeResponse.from(user, userLanguageService.listForUser(userId));
+        return MeResponse.from(user, userLanguageService.listForUser(userId), avatarService.getForUser(userId));
     }
 
     @Transactional
@@ -38,14 +40,14 @@ public class UserService {
         if (request.gender() != null) {
             user.setGender(request.gender().isBlank() ? null : request.gender().trim());
         }
-        return MeResponse.from(user, userLanguageService.listForUser(userId));
+        return MeResponse.from(user, userLanguageService.listForUser(userId), avatarService.getForUser(userId));
     }
 
     @Transactional
     public MeResponse updateIntention(UUID userId, Intention intention) {
         User user = requireUser(userId);
         user.setCurrentIntention(intention);
-        return MeResponse.from(user, userLanguageService.listForUser(userId));
+        return MeResponse.from(user, userLanguageService.listForUser(userId), avatarService.getForUser(userId));
     }
 
     @Transactional(readOnly = true)
@@ -53,7 +55,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .filter(u -> u.getStatus() == UserStatus.ACTIVE)
                 .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "User not found."));
-        return PublicProfileResponse.from(user, userLanguageService.listForUser(id));
+        return PublicProfileResponse.from(user, userLanguageService.listForUser(id), avatarService.getForUser(id));
     }
 
     private User requireUser(UUID userId) {

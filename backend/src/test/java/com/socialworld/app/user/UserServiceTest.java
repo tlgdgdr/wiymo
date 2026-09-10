@@ -30,6 +30,8 @@ class UserServiceTest {
     private UserRepository userRepository;
     @Mock
     private UserLanguageService userLanguageService;
+    @Mock
+    private com.socialworld.app.avatar.AvatarService avatarService;
 
     @InjectMocks
     private UserService userService;

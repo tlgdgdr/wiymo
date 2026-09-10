@@ -4,14 +4,17 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getAvatarAssets } from '@/api/avatar';
 import type { Intention, Me } from '@/api/types';
 import { getMe, updateIntention } from '@/api/users';
+import { Avatar } from '@/components/Avatar';
 import { INTENTIONS } from '@/constants/intentions';
 import { colors, spacing } from '@/theme';
 
 export default function HomeScreen() {
   const queryClient = useQueryClient();
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe });
+  const { data: assets } = useQuery({ queryKey: ['avatarAssets'], queryFn: getAvatarAssets });
 
   const intentionMutation = useMutation({
     mutationFn: updateIntention,
@@ -34,11 +37,12 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitial}>
-              {(me?.username ?? '?').charAt(0).toUpperCase()}
-            </Text>
-          </View>
+          <Avatar
+            avatar={me?.avatar}
+            assets={assets}
+            size={44}
+            fallbackInitial={me?.username}
+          />
           <View style={styles.headerText}>
             <Text style={styles.username}>{me?.username ?? '...'}</Text>
             <Text style={styles.headerSub}>Ready to connect?</Text>
@@ -95,15 +99,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
-  avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primaryDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitial: { color: colors.text, fontSize: 18, fontWeight: '800' },
   headerText: { flex: 1, marginLeft: spacing.sm },
   username: { color: colors.text, fontSize: 17, fontWeight: '700' },
   headerSub: { color: colors.textMuted, fontSize: 12 },

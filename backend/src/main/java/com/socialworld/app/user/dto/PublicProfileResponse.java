@@ -1,5 +1,6 @@
 package com.socialworld.app.user.dto;
 
+import com.socialworld.app.avatar.dto.AvatarResponse;
 import com.socialworld.app.intention.Intention;
 import com.socialworld.app.language.dto.UserLanguageResponse;
 import com.socialworld.app.user.User;
@@ -22,10 +23,11 @@ public record PublicProfileResponse(
         String bio,
         Intention currentIntention,
         List<UserLanguageResponse> languages,
+        AvatarResponse avatar,
         boolean online,
         Instant lastSeenAt
 ) {
-    public static PublicProfileResponse from(User user, List<UserLanguageResponse> languages) {
+    public static PublicProfileResponse from(User user, List<UserLanguageResponse> languages, AvatarResponse avatar) {
         return new PublicProfileResponse(
                 user.getId(),
                 user.getUsername(),
@@ -34,6 +36,7 @@ public record PublicProfileResponse(
                 user.getBio(),
                 user.getCurrentIntention(),
                 languages,
+                avatar,
                 user.isOnline(),
                 user.getLastSeenAt());
     }
