@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 
+import { usePushRegistration } from '@/notifications/usePushRegistration';
 import { useAuthStore } from '@/store/auth';
 import { colors } from '@/theme';
 
@@ -14,6 +15,7 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
+  usePushRegistration();
 
   useEffect(() => {
     void hydrate();

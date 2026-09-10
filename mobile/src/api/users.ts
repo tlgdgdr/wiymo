@@ -22,3 +22,17 @@ export function updateIntention(intention: Intention): Promise<Me> {
 export function getPublicProfile(userId: string): Promise<PublicProfile> {
   return apiFetch<PublicProfile>(`/api/users/${userId}`);
 }
+
+export function registerPushToken(token: string): Promise<void> {
+  return apiFetch<void>('/api/users/me/push-token', {
+    method: 'PUT',
+    body: JSON.stringify({ token }),
+  });
+}
+
+export function deleteAccount(password: string): Promise<void> {
+  return apiFetch<void>('/api/users/me', {
+    method: 'DELETE',
+    body: JSON.stringify({ password }),
+  });
+}

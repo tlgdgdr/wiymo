@@ -75,6 +75,15 @@ public class User {
     @Column(name = "last_seen_at")
     private Instant lastSeenAt;
 
+    /** Expo push token; null until the device registers one. Never exposed via DTOs. */
+    @Column(name = "expo_push_token", length = 100)
+    private String expoPushToken;
+
+    /** Moderation access; set manually in the database, never via API. */
+    @Column(name = "is_admin", nullable = false)
+    @Builder.Default
+    private boolean admin = false;
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();

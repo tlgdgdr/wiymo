@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SocialWorld Moderation</title>
+<style>
+  :root{--bg:#17131f;--surface:#221c2e;--surface2:#2e2740;--primary:#a78bfa;--text:#f4f1fa;--muted:#9d94b3;--err:#f87171;--ok:#4ade80}
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;padding:24px 16px;max-width:900px;margin:0 auto}
+  h1{font-size:22px;margin-bottom:4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+  .login{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  input,select{background:var(--surface);border:1px solid var(--surface2);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;flex:1;min-width:220px}
+  button{background:var(--primary);color:#1b1526;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:13px}
+  button.ghost{background:var(--surface2);color:var(--text)}
+  button.danger{background:var(--err);color:#1b1526}
+  .report{background:var(--surface);border-radius:14px;padding:14px;margin-bottom:10px}
+  .rhead{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+  .reason{color:var(--primary);font-weight:800;font-size:13px}
+  .when{color:var(--muted);font-size:12px}
+  .who{font-size:14px;margin-bottom:4px}
+  .who b{color:var(--err)}
+  .desc{color:var(--muted);font-size:13px;margin-bottom:10px;white-space:pre-wrap}
+  .actions{display:flex;gap:6px;flex-wrap:wrap}
+  .msg{color:var(--muted);font-size:13px;margin:12px 0}
+  .err{color:var(--err)}
+</style>
+</head>
+<body>
+<h1>Moderation</h1>
+<p class="sub">Paste an admin access token (login via /api/auth/login; the account needs users.is_admin = true).</p>
+
+<div class="login">
+  <input id="token" type="password" placeholder="Access token">
+  <select id="status">
+    <option value="OPEN">OPEN</option>
+    <option value="REVIEWED">REVIEWED</option>
+    <option value="CLOSED">CLOSED</option>
+  </select>
+  <button onclick="load()">Load reports</button>
+</div>
+
+<div id="out" class="msg">No data loaded.</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const headers = () => ({'Authorization': 'Bearer ' + $('token').value.trim(), 'Content-Type': 'application/json'});
+
+async function api(method, path) {
+  const res = await fetch(path, {method, headers: headers()});
+  if (res.status === 204) return null;
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.message || ('HTTP ' + res.status));
+  return body;
+}
+
+async function load() {
+  const out = $('out');
+  out.className = 'msg'; out.textContent = 'Loading…';
+  try {
+    const reports = await api('GET', '/api/admin/reports?status=' + $('status').value);
+    if (!reports.length) { out.textContent = 'No reports with this status.'; return; }
+    out.innerHTML = reports.map(r => `
+      <div class="report">
+        <div class="rhead">
+          <span class="reason">${r.reason}</span>
+          <span class="when">${new Date(r.createdAt).toLocaleString()}</span>
+        </div>
+        <div class="who">${esc(r.reporterUsername)} reported <b>${esc(r.reportedUsername)}</b></div>
+        ${r.description ? `<div class="desc">${esc(r.description)}</div>` : ''}
+        <div class="actions">
+          <button onclick="setReport('${r.id}','REVIEWED')">Mark reviewed</button>
+          <button class="ghost" onclick="setReport('${r.id}','CLOSED')">Close</button>
+          <button class="danger" onclick="setUser('${r.reportedUserId}','SUSPENDED')">Suspend user</button>
+          <button class="ghost" onclick="setUser('${r.reportedUserId}','ACTIVE')">Reactivate</button>
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    out.className = 'msg err'; out.textContent = e.message;
+  }
+}
+
+async function setReport(id, status) {
+  try { await api('POST', `/api/admin/reports/${id}/status?status=${status}`); load(); }
+  catch (e) { alert(e.message); }
+}
+async function setUser(id, status) {
+  if (status === 'SUSPENDED' && !confirm('Suspend this user? They will be unable to log in.')) return;
+  try { await api('POST', `/api/admin/users/${id}/status?status=${status}`); alert('Done.'); }
+  catch (e) { alert(e.message); }
+}
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>

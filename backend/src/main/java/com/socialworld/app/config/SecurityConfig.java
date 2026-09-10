@@ -46,6 +46,8 @@ public class SecurityConfig {
                                 "/api/public/**",
                                 // WebSocket handshake authenticates via token param
                                 "/ws/**",
+                                // Static moderation page; its API calls carry a bearer token
+                                "/admin.html",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

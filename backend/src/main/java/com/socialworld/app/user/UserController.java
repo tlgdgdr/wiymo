@@ -1,7 +1,9 @@
 package com.socialworld.app.user;
 
 import com.socialworld.app.auth.AuthenticatedUser;
+import com.socialworld.app.user.dto.DeleteAccountRequest;
 import com.socialworld.app.user.dto.MeResponse;
+import com.socialworld.app.user.dto.PushTokenRequest;
 import com.socialworld.app.user.dto.PublicProfileResponse;
 import com.socialworld.app.user.dto.UpdateIntentionRequest;
 import com.socialworld.app.user.dto.UpdateProfileRequest;
@@ -10,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -45,6 +49,22 @@ public class UserController {
     public MeResponse updateIntention(@AuthenticationPrincipal AuthenticatedUser user,
                                       @Valid @RequestBody UpdateIntentionRequest request) {
         return userService.updateIntention(user.id(), request.intention());
+    }
+
+    @PutMapping("/me/push-token")
+    @Operation(summary = "Register this device's Expo push token")
+    public ResponseEntity<Void> registerPushToken(@AuthenticationPrincipal AuthenticatedUser user,
+                                                  @Valid @RequestBody PushTokenRequest request) {
+        userService.registerPushToken(user.id(), request.token());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/me")
+    @Operation(summary = "Delete my account (password required; irreversible, anonymizes data)")
+    public ResponseEntity<Void> deleteAccount(@AuthenticationPrincipal AuthenticatedUser user,
+                                              @Valid @RequestBody DeleteAccountRequest request) {
+        userService.deleteAccount(user.id(), request.password());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")

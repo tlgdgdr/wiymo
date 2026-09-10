@@ -1,9 +1,11 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { deleteAccount } from '@/api/users';
+import { ApiRequestError } from '@/api/client';
 import { API_URL } from '@/config';
 import { useAuthStore } from '@/store/auth';
 import { colors, spacing } from '@/theme';
@@ -14,6 +16,28 @@ export default function SettingsScreen() {
   const logout = async () => {
     await clearSession();
     router.replace('/(auth)/login');
+  };
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteState, setDeleteState] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!deletePassword || deleting) return;
+    setDeleting(true);
+    setDeleteState(null);
+    try {
+      await deleteAccount(deletePassword);
+      await clearSession();
+      router.replace('/(auth)/login');
+    } catch (e) {
+      setDeleteState(
+        e instanceof ApiRequestError ? e.message : 'Could not delete the account.',
+      );
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -76,6 +100,40 @@ export default function SettingsScreen() {
         <Pressable style={styles.logout} onPress={() => void logout()}>
           <Text style={styles.logoutText}>Log out</Text>
         </Pressable>
+
+        <Text style={styles.sectionLabel}>Danger zone</Text>
+        <View style={styles.card}>
+          <Pressable style={styles.row} onPress={() => setDeleteOpen((v) => !v)}>
+            <Text style={[styles.rowText, styles.dangerText]}>Delete my account</Text>
+            <Text style={styles.chevron}>{deleteOpen ? '▾' : '›'}</Text>
+          </Pressable>
+          {deleteOpen ? (
+            <View style={styles.deleteBox}>
+              <Text style={styles.hint}>
+                This is permanent. Your profile, avatar and languages are removed
+                and your account is anonymized. Enter your password to confirm.
+              </Text>
+              <TextInput
+                style={styles.passwordInput}
+                value={deletePassword}
+                onChangeText={setDeletePassword}
+                placeholder="Password"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry
+              />
+              {deleteState ? <Text style={styles.deleteError}>{deleteState}</Text> : null}
+              <Pressable
+                style={[styles.deleteButton, (!deletePassword || deleting) && styles.deleteDisabled]}
+                disabled={!deletePassword || deleting}
+                onPress={() => void confirmDelete()}
+              >
+                <Text style={styles.deleteButtonText}>
+                  {deleting ? 'Deleting…' : 'Delete forever'}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -129,4 +187,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutText: { color: colors.error, fontSize: 15, fontWeight: '700' },
+  dangerText: { color: colors.error },
+  deleteBox: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
+  passwordInput: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    color: colors.text,
+    fontSize: 15,
+  },
+  deleteError: { color: colors.error, fontSize: 12.5 },
+  deleteButton: {
+    backgroundColor: colors.error,
+    borderRadius: 12,
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  deleteDisabled: { opacity: 0.5 },
+  deleteButtonText: { color: '#1b1526', fontWeight: '800', fontSize: 14 },
 });

@@ -34,6 +34,16 @@ class UserServiceTest {
     private com.socialworld.app.avatar.AvatarService avatarService;
     @Mock
     private com.socialworld.app.moderation.BlockService blockService;
+    @Mock
+    private com.socialworld.app.auth.AuthService authService;
+    @Mock
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    @Mock
+    private com.socialworld.app.avatar.AvatarRepository avatarRepository;
+    @Mock
+    private com.socialworld.app.language.UserLanguageRepository userLanguageRepository;
+    @Mock
+    private com.socialworld.app.room.RoomPresenceRepository roomPresenceRepository;
 
     @InjectMocks
     private UserService userService;
@@ -112,6 +122,41 @@ class UserServiceTest {
         userService.updateProfile(user.getId(), new UpdateProfileRequest("  ", null, null));
 
         assertThat(user.getBio()).isNull();
+    }
+
+    @Test
+    void deleteAccount_wrongPasswordRejected() {
+        User user = user(UserStatus.ACTIVE);
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
+
+        assertThatThrownBy(() -> userService.deleteAccount(user.getId(), "wrong"))
+                .isInstanceOf(ApiException.class)
+                .extracting(e -> ((ApiException) e).getCode())
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+        assertThat(user.getStatus()).isEqualTo(UserStatus.ACTIVE);
+    }
+
+    @Test
+    void deleteAccount_anonymizesAndRevokesSessions() {
+        User user = user(UserStatus.ACTIVE);
+        user.setBio("bio");
+        user.setExpoPushToken("ExponentPushToken[x]");
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", "hash")).thenReturn(true);
+        when(userLanguageRepository.findByUserIdOrderByCreatedAt(user.getId()))
+                .thenReturn(List.of());
+
+        userService.deleteAccount(user.getId(), "password123");
+
+        assertThat(user.getStatus()).isEqualTo(UserStatus.DELETED);
+        assertThat(user.getUsername()).startsWith("deleted_");
+        assertThat(user.getEmail()).endsWith("@deleted.invalid");
+        assertThat(user.getBio()).isNull();
+        assertThat(user.getExpoPushToken()).isNull();
+        org.mockito.Mockito.verify(avatarRepository).deleteById(user.getId());
+        org.mockito.Mockito.verify(roomPresenceRepository).deleteById(user.getId());
+        org.mockito.Mockito.verify(authService).revokeAllSessions(user.getId());
     }
 
     @Test

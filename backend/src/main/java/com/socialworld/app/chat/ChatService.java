@@ -7,6 +7,7 @@ import com.socialworld.app.chat.ws.ChatSessionRegistry;
 import com.socialworld.app.common.exception.ApiException;
 import com.socialworld.app.common.exception.ErrorCode;
 import com.socialworld.app.moderation.BlockService;
+import com.socialworld.app.notification.PushNotificationService;
 import com.socialworld.app.user.User;
 import com.socialworld.app.user.UserRepository;
 import com.socialworld.app.user.UserStatus;
@@ -35,6 +36,7 @@ public class ChatService {
     private final AvatarService avatarService;
     private final ChatSessionRegistry sessionRegistry;
     private final BlockService blockService;
+    private final PushNotificationService pushNotificationService;
 
     /**
      * Persists a message and pushes it to both participants' live sockets.
@@ -68,6 +70,16 @@ public class ChatService {
         MessageResponse response = MessageResponse.from(message);
         sessionRegistry.sendToUser(receiverId, new WsEvent<>("message", response));
         sessionRegistry.sendToUser(senderId, new WsEvent<>("message", response));
+
+        // No live socket: reach the recipient's phone instead.
+        if (!sessionRegistry.isOnline(receiverId)) {
+            String senderName = userRepository.findById(senderId)
+                    .map(User::getUsername).orElse("Someone");
+            String preview = type == MessageType.GIFT
+                    ? "\uD83C\uDF81 sent you a gift: " + content
+                    : content.length() > 100 ? content.substring(0, 100) + "…" : content;
+            pushNotificationService.notifyUser(receiverId, senderName, preview);
+        }
         return response;
     }
 

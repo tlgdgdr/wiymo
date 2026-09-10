@@ -40,6 +40,8 @@ class ChatServiceTest {
     private ChatSessionRegistry sessionRegistry;
     @Mock
     private com.socialworld.app.moderation.BlockService blockService;
+    @Mock
+    private com.socialworld.app.notification.PushNotificationService pushNotificationService;
 
     @InjectMocks
     private ChatService chatService;
@@ -69,6 +71,30 @@ class ChatServiceTest {
         assertThat(response.senderId()).isEqualTo(senderId);
         verify(sessionRegistry).sendToUser(eq(receiver.getId()), any());
         verify(sessionRegistry).sendToUser(eq(senderId), any());
+    }
+
+    @Test
+    void send_pushesWhenReceiverHasNoLiveSocket() {
+        User receiver = activeReceiver();
+        when(userRepository.findById(receiver.getId())).thenReturn(Optional.of(receiver));
+        when(messageRepository.save(any(Message.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(sessionRegistry.isOnline(receiver.getId())).thenReturn(false);
+
+        chatService.sendMessage(senderId, receiver.getId(), "hello", MessageType.TEXT);
+
+        verify(pushNotificationService).notifyUser(eq(receiver.getId()), any(), eq("hello"));
+    }
+
+    @Test
+    void send_skipsPushWhenReceiverIsLive() {
+        User receiver = activeReceiver();
+        when(userRepository.findById(receiver.getId())).thenReturn(Optional.of(receiver));
+        when(messageRepository.save(any(Message.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(sessionRegistry.isOnline(receiver.getId())).thenReturn(true);
+
+        chatService.sendMessage(senderId, receiver.getId(), "hello", MessageType.TEXT);
+
+        verify(pushNotificationService, never()).notifyUser(any(), any(), any());
     }
 
     @Test

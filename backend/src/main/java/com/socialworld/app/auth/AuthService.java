@@ -113,6 +113,12 @@ public class AuthService {
         return issueTokens(user);
     }
 
+    /** Kills every refresh token; used on account deletion. */
+    @Transactional
+    public void revokeAllSessions(UUID userId) {
+        refreshTokenRepository.revokeAllForUser(userId);
+    }
+
     private void requireUsable(User user) {
         if (user.getStatus() == UserStatus.SUSPENDED) {
             throw new ApiException(ErrorCode.ACCOUNT_SUSPENDED);
