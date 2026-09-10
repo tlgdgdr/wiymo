@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getAvatarAssets } from '@/api/avatar';
+import { listRooms } from '@/api/rooms';
 import type { Intention, Me } from '@/api/types';
 import { getMe, updateIntention } from '@/api/users';
 import { Avatar } from '@/components/Avatar';
@@ -15,6 +16,11 @@ export default function HomeScreen() {
   const queryClient = useQueryClient();
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe });
   const { data: assets } = useQuery({ queryKey: ['avatarAssets'], queryFn: getAvatarAssets });
+  const current = me?.currentIntention ?? null;
+  const { data: recommendedRooms } = useQuery({
+    queryKey: ['recommendations', 'rooms', current],
+    queryFn: () => listRooms(current),
+  });
 
   const intentionMutation = useMutation({
     mutationFn: updateIntention,
@@ -24,8 +30,6 @@ export default function HomeScreen() {
       void queryClient.invalidateQueries({ queryKey: ['recommendations'] });
     },
   });
-
-  const current = me?.currentIntention ?? null;
 
   const selectIntention = (value: Intention) => {
     if (value !== current && !intentionMutation.isPending) {
@@ -77,12 +81,36 @@ export default function HomeScreen() {
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>Recommended Rooms</Text>
-        <View style={styles.placeholderBox}>
-          <Text style={styles.placeholderText}>Rooms arrive in the next phase 🏠</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recommended Rooms</Text>
+          <Link href="/(app)/rooms" style={styles.sectionLink}>
+            See all
+          </Link>
         </View>
+        {(recommendedRooms ?? []).slice(0, 3).map((room) => (
+          <Pressable
+            key={room.id}
+            onPress={() => router.push(`/(app)/room/${room.id}`)}
+            style={({ pressed }) => [styles.roomRow, pressed && styles.cardPressed]}
+          >
+            <View style={styles.roomRowText}>
+              <Text style={styles.roomRowName}>{room.name}</Text>
+              {room.description ? (
+                <Text style={styles.roomRowDescription} numberOfLines={1}>
+                  {room.description}
+                </Text>
+              ) : null}
+            </View>
+            <Text style={styles.roomRowPopulation}>👥 {room.population}</Text>
+          </Pressable>
+        ))}
+        {recommendedRooms && recommendedRooms.length === 0 ? (
+          <View style={styles.placeholderBox}>
+            <Text style={styles.placeholderText}>No rooms for this mood yet.</Text>
+          </View>
+        ) : null}
 
-        <Text style={styles.sectionTitle}>Online People</Text>
+        <Text style={[styles.sectionTitle, { marginTop: spacing.lg, marginBottom: spacing.sm }]}>Online People</Text>
         <View style={styles.placeholderBox}>
           <Text style={styles.placeholderText}>Discovery arrives soon 👋</Text>
         </View>
@@ -132,13 +160,31 @@ const styles = StyleSheet.create({
   cardLabel: { color: colors.text, fontSize: 15, fontWeight: '700' },
   cardLabelActive: { color: colors.primary },
   cardTagline: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
   sectionTitle: {
     color: colors.text,
     fontSize: 17,
     fontWeight: '800',
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
   },
+  sectionLink: { color: colors.primary, fontSize: 13, fontWeight: '700' },
+  roomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  roomRowText: { flex: 1 },
+  roomRowName: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  roomRowDescription: { color: colors.textMuted, fontSize: 12, marginTop: 1 },
+  roomRowPopulation: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
   placeholderBox: {
     backgroundColor: colors.surface,
     borderRadius: 16,

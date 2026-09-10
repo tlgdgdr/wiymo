@@ -107,6 +107,44 @@ export interface UserAvatar {
   accessoryId: string | null;
 }
 
+export type RoomTheme = 'CAFE' | 'LOUNGE' | 'NIGHT' | 'LANGUAGE' | 'CASUAL';
+
+export interface Room {
+  id: string;
+  name: string;
+  description: string | null;
+  theme: RoomTheme;
+  intention: Intention | null;
+  backgroundImageUrl: string;
+  maxUsers: number;
+  population: number;
+}
+
+export interface RoomSlot {
+  slotIndex: number;
+  xPercent: number;
+  yPercent: number;
+  scale: number;
+}
+
+export interface RoomDetail {
+  room: Room;
+  slots: RoomSlot[];
+}
+
+export interface RoomUser {
+  userId: string;
+  username: string;
+  slotIndex: number;
+  currentIntention: Intention | null;
+  avatar: UserAvatar;
+}
+
+export interface JoinRoomResponse {
+  roomId: string;
+  slotIndex: number;
+}
+
 export interface AddLanguageRequest {
   languageCode: string;
   type: LanguageType;

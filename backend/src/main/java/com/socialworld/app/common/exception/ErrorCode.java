@@ -30,7 +30,11 @@ public enum ErrorCode {
     LANGUAGE_LIMIT_REACHED(HttpStatus.UNPROCESSABLE_ENTITY, "You cannot add more languages."),
 
     // Avatar
-    AVATAR_ASSET_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid avatar asset selection.");
+    AVATAR_ASSET_INVALID(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid avatar asset selection."),
+
+    // Rooms
+    ROOM_FULL(HttpStatus.CONFLICT, "This room is full."),
+    NOT_IN_ROOM(HttpStatus.CONFLICT, "You are not in this room.");
 
     private final HttpStatus status;
     private final String defaultMessage;
