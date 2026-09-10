@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -82,6 +83,22 @@ export default function SettingsScreen() {
 
         <Text style={styles.sectionLabel}>About</Text>
         <View style={styles.card}>
+          <Pressable
+            style={styles.row}
+            onPress={() => void Linking.openURL(`${API_URL}/privacy.html`)}
+          >
+            <Text style={styles.rowText}>Privacy Policy</Text>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable
+            style={styles.row}
+            onPress={() => void Linking.openURL(`${API_URL}/terms.html`)}
+          >
+            <Text style={styles.rowText}>Terms of Service</Text>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
+          <View style={styles.divider} />
           <View style={styles.row}>
             <Text style={styles.rowText}>Version</Text>
             <Text style={styles.rowValue}>

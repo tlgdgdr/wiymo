@@ -48,6 +48,10 @@ public class SecurityConfig {
                                 "/ws/**",
                                 // Static moderation page; its API calls carry a bearer token
                                 "/admin.html",
+                                // Public legal pages (store requirement)
+                                "/privacy.html",
+                                "/terms.html",
+                                "/legal.css",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
