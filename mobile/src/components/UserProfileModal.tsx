@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -62,9 +63,15 @@ export function UserProfileModal({ userId, onClose }: Props) {
           ) : null}
 
           <View style={styles.actions}>
-            <Pressable style={[styles.action, styles.actionDisabled]}>
+            <Pressable
+              style={styles.action}
+              onPress={() => {
+                if (!userId) return;
+                onClose();
+                router.push(`/(app)/chat/${userId}`);
+              }}
+            >
               <Text style={styles.actionText}>💬 Chat</Text>
-              <Text style={styles.actionSoon}>soon</Text>
             </Pressable>
             <Pressable style={[styles.action, styles.actionDisabled]}>
               <Text style={styles.actionText}>🎁 Gift</Text>

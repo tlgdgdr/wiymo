@@ -34,7 +34,10 @@ public enum ErrorCode {
 
     // Rooms
     ROOM_FULL(HttpStatus.CONFLICT, "This room is full."),
-    NOT_IN_ROOM(HttpStatus.CONFLICT, "You are not in this room.");
+    NOT_IN_ROOM(HttpStatus.CONFLICT, "You are not in this room."),
+
+    // Social
+    SELF_ACTION_NOT_ALLOWED(HttpStatus.UNPROCESSABLE_ENTITY, "You cannot do this to yourself.");
 
     private final HttpStatus status;
     private final String defaultMessage;

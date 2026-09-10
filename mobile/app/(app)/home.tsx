@@ -51,6 +51,9 @@ export default function HomeScreen() {
             <Text style={styles.username}>{me?.username ?? '...'}</Text>
             <Text style={styles.headerSub}>Ready to connect?</Text>
           </View>
+          <Link href="/(app)/chats" style={styles.profileLink}>
+            Chats
+          </Link>
           <Link href="/(app)/profile" style={styles.profileLink}>
             Profile
           </Link>

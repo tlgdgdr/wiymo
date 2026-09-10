@@ -145,6 +145,27 @@ export interface JoinRoomResponse {
   slotIndex: number;
 }
 
+export type MessageType = 'TEXT' | 'GIFT' | 'SYSTEM';
+
+export interface Message {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  messageType: MessageType;
+  createdAt: string;
+  readAt: string | null;
+}
+
+export interface Conversation {
+  partnerId: string;
+  partnerUsername: string;
+  partnerOnline: boolean;
+  partnerAvatar: UserAvatar;
+  lastMessage: Message;
+  unreadCount: number;
+}
+
 export interface AddLanguageRequest {
   languageCode: string;
   type: LanguageType;
