@@ -151,6 +151,17 @@ class AuthServiceTest {
     }
 
     @Test
+    void login_rejectsUnknownUserWithSameError() {
+        when(userRepository.findByUsernameIgnoreCase("ghost")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase("ghost")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("ghost", "whatever")))
+                .isInstanceOf(ApiException.class)
+                .extracting(e -> ((ApiException) e).getCode())
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+    }
+
+    @Test
     void login_rejectsSuspendedUser() {
         User user = activeUser("password123");
         user.setStatus(UserStatus.SUSPENDED);

@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +38,17 @@ public class AuthService {
     private final JwtProperties jwtProperties;
 
     private final SecureRandom secureRandom = new SecureRandom();
+
+    private volatile String cachedDummyHash;
+
+    private String dummyHash() {
+        String hash = cachedDummyHash;
+        if (hash == null) {
+            hash = passwordEncoder.encode(UUID.randomUUID().toString());
+            cachedDummyHash = hash;
+        }
+        return hash;
+    }
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -67,9 +79,13 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByUsernameIgnoreCase(request.identifier())
                 .or(() -> userRepository.findByEmailIgnoreCase(request.identifier()))
-                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
+                .orElse(null);
 
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        // Always run one BCrypt comparison so response time does not reveal
+        // whether the identifier exists (user enumeration via timing).
+        String hashToCheck = user != null ? user.getPasswordHash() : dummyHash();
+        boolean passwordMatches = passwordEncoder.matches(request.password(), hashToCheck);
+        if (user == null || !passwordMatches) {
             throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
         }
         requireUsable(user);

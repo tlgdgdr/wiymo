@@ -21,8 +21,12 @@ public class JwtService {
     private final JwtProperties properties;
 
     public JwtService(JwtProperties properties) {
+        byte[] secretBytes = properties.secret().getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < 32) {
+            throw new IllegalStateException("app.jwt.secret must be at least 32 bytes");
+        }
         this.properties = properties;
-        this.key = Keys.hmacShaKeyFor(properties.secret().getBytes(StandardCharsets.UTF_8));
+        this.key = Keys.hmacShaKeyFor(secretBytes);
     }
 
     public String generateAccessToken(UUID userId, String username) {
