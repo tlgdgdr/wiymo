@@ -2,7 +2,7 @@
 
 A social avatar platform built around **intentions**: users pick what they're in the mood for
 (casual chat, deep talk, flirt, meeting people, language exchange, chill), enter themed virtual
-rooms, appear as layered 2D avatars, chat, and send virtual gifts.
+rooms, appear as layered 2D avatars, chat in real time, and send virtual gifts.
 
 > The product name is undecided. The neutral codename **SocialWorld** is used everywhere
 > (`com.socialworld.app`, app display name, artifact ids) so renaming later is a config change,
@@ -16,17 +16,23 @@ rooms, appear as layered 2D avatars, chat, and send virtual gifts.
 └── docker-compose.yml   Local PostgreSQL
 ```
 
-## Current status — Phase 1 complete
+## MVP status — all 9 phases complete
 
-- Project bootstrap (backend + mobile)
-- PostgreSQL via Docker Compose, schema managed by Flyway
-- User entity (18+ enforced at registration)
-- Registration, login (username **or** email), JWT access tokens + rotating refresh tokens
-- Global `{code, message}` error contract
-- Mobile: splash, login, register, placeholder home with persisted session (SecureStore)
+| Area | What works |
+|---|---|
+| Auth | Register (18+ enforced), login by username/email, JWT + rotating hashed refresh tokens, rate-limited auth endpoints, BCrypt |
+| Profiles | Bio/country/gender, public profiles expose age (never birth date or email) |
+| Intentions | 6 moods, changeable anytime; drives room and people recommendations |
+| Languages | NATIVE/LEARNING/SPEAKING with CEFR levels |
+| Avatars | Layered 2D system (8 categories), asset catalog with premium fields, creator UI |
+| Rooms | 5 themed rooms, percent-based seat slots with depth scaling, one-room-at-a-time presence enforced by schema |
+| Chat | Real-time over raw WebSocket (+ REST fallback), conversations with unread counts, read marking, sanitization |
+| Gifts | 5-gift catalog, wallet with 100 welcome coins, transactional sending (row-locked, never negative), live notification |
+| Discovery | Weighted scoring (intention > online > language fit > shared room > recency), filterable |
+| Connections | Request/accept/reject, duplicate-proof in both directions |
+| Moderation | Block (cuts chat/gifts/profiles/discovery/rooms both ways, neutral errors), report with 8 reasons |
 
-Later phases (profiles, intentions, avatars, rooms, chat, gifts, discovery, moderation) build on
-this codebase — see the module layout in `backend/src/main/java/com/socialworld/app/`.
+Backend: 84 unit tests. Full architecture notes below.
 
 ## Prerequisites
 
@@ -38,38 +44,23 @@ this codebase — see the module layout in `backend/src/main/java/com/socialworl
 ## Running the backend
 
 ```bash
-# 1. Start PostgreSQL
 docker compose up -d postgres
-
-# 2. Run the API (local profile enables SQL logging)
 cd backend
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-- API: http://localhost:8080
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- Flyway migrations run automatically on startup.
+- API: http://localhost:8080 — Swagger UI: http://localhost:8080/swagger-ui.html
+- Flyway migrations (V1–V8) run automatically; they seed 5 rooms, 24 avatar assets and 5 gifts.
+- The **local profile also seeds 10 demo users** — log in as `mira`, `leo`, `ada`, `nova`,
+  `kenji`, `sofia`, `omar`, `lena`, `marco` or `yuki`, password `password123`. Half are
+  "online" and already sitting in rooms, with languages, avatars and a starter conversation.
 
-Configuration is environment-driven; see `backend/.env.example`. Defaults work with the
-docker-compose database. **Set a real `JWT_SECRET` for anything beyond local development.**
-
-### Quick smoke test
-
-```bash
-curl -s -X POST localhost:8080/api/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"username":"alice","email":"alice@example.com","password":"password123","birthDate":"1998-04-12","countryCode":"TR"}'
-
-curl -s -X POST localhost:8080/api/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"identifier":"alice","password":"password123"}'
-```
-
-### Backend tests
+Configuration is environment-driven (see `backend/.env.example`). Defaults work with the
+docker-compose database. The app **refuses to start** with the built-in dev JWT secret outside
+the local profile — set `JWT_SECRET` (`openssl rand -hex 32`) anywhere else.
 
 ```bash
-cd backend
-mvn test
+cd backend && mvn test        # run the test suite
 ```
 
 ## Running the mobile app
@@ -77,37 +68,81 @@ mvn test
 ```bash
 cd mobile
 npm install
-npx expo start
+npx expo start                # scan the QR with Expo Go
+npm run typecheck             # tsc --noEmit
 ```
 
-Scan the QR code with Expo Go, or press `a`/`i` for an emulator.
+**Physical device:** `localhost` points at the phone. Set `expo.extra.apiUrl` in
+`mobile/app.json` to your machine's LAN IP (e.g. `http://192.168.1.10:8080`) and restart Expo.
 
-**Physical device note:** `localhost` points at the phone itself. Set
-`expo.extra.apiUrl` in `mobile/app.json` to your machine's LAN IP,
-e.g. `http://192.168.1.10:8080`, then restart Expo.
+**Two-person test:** register two accounts (or use two demo users), join the same room from
+both, tap each other's avatars — chat, gifts and blocking all work live.
 
-Type checking:
+## Architecture
 
-```bash
-npm run typecheck
+**Modular monolith.** Each backend package under `com.socialworld.app` owns its
+controller/service/repository/entities/DTOs; modules call each other's *services* only:
+
+```
+auth  user  intention  language  avatar  room  chat  gift  wallet
+discovery  friendship (connections)  moderation  common  config
 ```
 
-## API error contract
+Key decisions:
 
-Errors are always:
+- **JPA entities never cross the API boundary** — every response is a DTO record.
+- **Flyway owns the schema** (`ddl-auto: validate`); JPA can never drift from migrations.
+- **Errors are a stable contract**: always `{ "code": "...", "message": "..." }` via one
+  `ErrorCode` enum + `GlobalExceptionHandler`. Clients switch on `code`, never parse messages.
+- **Auth**: 15-min HS256 access tokens; opaque refresh tokens stored hashed, rotated on every
+  use — reuse of a revoked token revokes the whole family. Constant-work login defeats
+  username-enumeration timing. Fixed-window per-IP rate limiting on `/api/auth/*` behind a
+  `RateLimiter` abstraction (swap in Redis later).
+- **Real-time**: a clean JSON protocol over a raw WebSocket at `/ws/chat?token=...`
+  (no STOMP — zero extra mobile dependencies). `ChatSessionRegistry` decouples push from the
+  handler, so chat and gifts share it. Offline users simply catch up over REST.
+- **Invariants live in the schema where possible**: one room per user (`room_presence.user_id`
+  is the PK), no double-seating (unique room+slot), non-negative wallets (CHECK constraint),
+  one live connection per pair (partial unique index).
+- **Moderation is centralized**: `BlockService` is the single interaction authority consulted
+  by chat, gifts, connections, profiles, discovery and rooms; its error is deliberately
+  neutral so it never reveals who blocked whom.
+- **Discovery is simple weighted scoring** over a bounded candidate pool — no ML, fully
+  debuggable (the score ships in the response).
 
-```json
-{ "code": "UNDERAGE", "message": "You must be at least 18 years old." }
-```
+**Scale target**: one Spring Boot instance + one PostgreSQL comfortably covers the initial
+0–10,000 users. The seams for later (Redis presence/rate limiting, WebSocket fan-out,
+paid cosmetics, animated gifts) are already in the code but deliberately unbuilt.
 
-Clients switch on `code` (stable), never on `message`.
+## API surface (summary)
 
-## Auth model
+| Area | Endpoints |
+|---|---|
+| Auth | `POST /api/auth/register` · `login` · `refresh` |
+| Me | `GET/PUT /api/users/me` · `PUT /api/users/me/intention` |
+| Languages | `GET/POST /api/users/me/languages` · `DELETE .../{id}` |
+| Avatar | `GET /api/avatar/assets` · `GET/PUT /api/users/me/avatar` |
+| Profiles | `GET /api/users/{id}` |
+| Rooms | `GET /api/rooms[?intention=]` · `GET /api/rooms/{id}` · `POST .../join` · `POST .../leave` · `GET .../users` |
+| Chat | `GET /api/conversations` · `GET/POST /api/conversations/{userId}/messages` · WS `/ws/chat?token=` |
+| Gifts | `GET /api/gifts` · `POST /api/gifts/send` · `GET /api/wallets/me` |
+| Discovery | `GET /api/discovery/users?intention&languageCode&countryCode&onlineOnly&ageMin&ageMax` |
+| Connections | `POST /api/connections/{userId}` · `POST .../{id}/accept` · `.../reject` · `GET /api/connections` |
+| Moderation | `POST/DELETE /api/users/{id}/block` · `POST /api/reports` |
 
-- Access token: short-lived JWT (HS256, 15 min) sent as `Authorization: Bearer <token>`.
-- Refresh token: opaque random value (30 days), stored **hashed** server-side, **rotated on every
-  refresh**; reuse of a revoked token revokes all of the user's refresh tokens.
-- Passwords: BCrypt.
+Full request/response shapes: Swagger UI.
+
+## Mobile screens
+
+Splash · Login · Register · Home (intention cards + recommendations) · Room List · Room
+(avatars at slots) · User Profile modal (chat/gift/connect/block/report) · Chat List ·
+Private Chat · Gift Selector · Avatar Creator · Profile · Edit Profile · Languages · Settings
+
+## Placeholder art
+
+Avatar layers, room backgrounds and gift icons are placeholder URLs (`placehold.co`). When
+real art lands (transparent PNGs on a shared canvas per avatar category; 1080×1920 room
+scenes), only the URLs in the `avatar_assets`, `rooms` and `gifts` tables change.
 
 ## Never commit secrets
 

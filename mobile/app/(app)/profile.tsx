@@ -9,19 +9,11 @@ import { getMe } from '@/api/users';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { intentionEmoji, intentionLabel } from '@/constants/intentions';
-import { useAuthStore } from '@/store/auth';
 import { colors, spacing } from '@/theme';
 
 export default function ProfileScreen() {
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe });
   const { data: assets } = useQuery({ queryKey: ['avatarAssets'], queryFn: getAvatarAssets });
-  const clearSession = useAuthStore((s) => s.clearSession);
-
-  const logout = async () => {
-    await clearSession();
-    router.replace('/(auth)/login');
-  };
-
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -62,7 +54,7 @@ export default function ProfileScreen() {
         <View style={styles.actions}>
           <Button title="Edit avatar" onPress={() => router.push('/(app)/avatar-creator')} />
           <Button title="Edit profile" onPress={() => router.push('/(app)/edit-profile')} />
-          <Button title="Log out" variant="ghost" onPress={() => void logout()} />
+          <Button title="Settings" variant="ghost" onPress={() => router.push('/(app)/settings')} />
         </View>
       </ScrollView>
     </SafeAreaView>
