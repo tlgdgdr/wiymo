@@ -58,7 +58,8 @@ public class RoomController {
 
     @GetMapping("/{id}/users")
     @Operation(summary = "Current occupants with their slots and avatars")
-    public List<RoomUserResponse> roomUsers(@PathVariable UUID id) {
-        return roomService.listRoomUsers(id);
+    public List<RoomUserResponse> roomUsers(@AuthenticationPrincipal AuthenticatedUser user,
+                                            @PathVariable UUID id) {
+        return roomService.listRoomUsers(user.id(), id);
     }
 }

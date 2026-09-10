@@ -7,6 +7,7 @@ import com.socialworld.app.language.LanguageType;
 import com.socialworld.app.language.UserLanguage;
 import com.socialworld.app.language.UserLanguageRepository;
 import com.socialworld.app.language.dto.UserLanguageResponse;
+import com.socialworld.app.moderation.BlockService;
 import com.socialworld.app.room.RoomPresence;
 import com.socialworld.app.room.RoomPresenceRepository;
 import com.socialworld.app.user.User;
@@ -51,6 +52,7 @@ public class DiscoveryService {
     private final UserLanguageRepository userLanguageRepository;
     private final RoomPresenceRepository roomPresenceRepository;
     private final AvatarService avatarService;
+    private final BlockService blockService;
 
     public record Filters(
             Intention intention,
@@ -69,9 +71,12 @@ public class DiscoveryService {
                 ? filters.intention()
                 : viewer != null ? viewer.getCurrentIntention() : null;
 
+        Set<UUID> blocked = blockService.blockedPartnerIds(viewerId);
+
         List<User> candidates = userRepository
                 .findDiscoveryCandidates(UserStatus.ACTIVE).stream()
                 .filter(u -> !u.getId().equals(viewerId))
+                .filter(u -> !blocked.contains(u.getId()))
                 .filter(u -> !filters.onlineOnly() || u.isOnline())
                 .filter(u -> filters.countryCode() == null
                         || filters.countryCode().equalsIgnoreCase(u.getCountryCode()))

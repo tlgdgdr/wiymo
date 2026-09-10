@@ -49,7 +49,8 @@ public class UserController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Another user's public profile (age, never birth date)")
-    public PublicProfileResponse publicProfile(@PathVariable UUID id) {
-        return userService.getPublicProfile(id);
+    public PublicProfileResponse publicProfile(@AuthenticationPrincipal AuthenticatedUser user,
+                                               @PathVariable UUID id) {
+        return userService.getPublicProfile(user.id(), id);
     }
 }

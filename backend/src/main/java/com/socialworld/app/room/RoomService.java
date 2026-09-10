@@ -4,6 +4,7 @@ import com.socialworld.app.avatar.AvatarService;
 import com.socialworld.app.common.exception.ApiException;
 import com.socialworld.app.common.exception.ErrorCode;
 import com.socialworld.app.intention.Intention;
+import com.socialworld.app.moderation.BlockService;
 import com.socialworld.app.room.dto.JoinRoomResponse;
 import com.socialworld.app.room.dto.RoomDetailResponse;
 import com.socialworld.app.room.dto.RoomResponse;
@@ -32,6 +33,7 @@ public class RoomService {
     private final RoomPresenceRepository roomPresenceRepository;
     private final UserRepository userRepository;
     private final AvatarService avatarService;
+    private final BlockService blockService;
 
     @Transactional(readOnly = true)
     public List<RoomResponse> listRooms(Intention intention) {
@@ -109,8 +111,9 @@ public class RoomService {
     }
 
     @Transactional(readOnly = true)
-    public List<RoomUserResponse> listRoomUsers(UUID roomId) {
+    public List<RoomUserResponse> listRoomUsers(UUID viewerId, UUID roomId) {
         requireRoom(roomId);
+        Set<UUID> blocked = blockService.blockedPartnerIds(viewerId);
         List<RoomPresence> presences = roomPresenceRepository.findByRoomIdOrderBySlotIndex(roomId);
         if (presences.isEmpty()) {
             return List.of();
@@ -122,7 +125,7 @@ public class RoomService {
         return presences.stream()
                 .map(presence -> {
                     User user = users.get(presence.getUserId());
-                    if (user == null) {
+                    if (user == null || blocked.contains(presence.getUserId())) {
                         return null;
                     }
                     return new RoomUserResponse(

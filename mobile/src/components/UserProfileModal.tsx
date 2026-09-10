@@ -6,6 +6,8 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { getAvatarAssets } from '@/api/avatar';
 import { ApiRequestError } from '@/api/client';
 import { requestConnection } from '@/api/connections';
+import { blockUser, reportUser } from '@/api/moderation';
+import type { ReportReason } from '@/api/types';
 import { getPublicProfile } from '@/api/users';
 import { Avatar } from '@/components/Avatar';
 import { intentionEmoji, intentionLabel } from '@/constants/intentions';
@@ -23,6 +25,34 @@ interface Props {
 export function UserProfileModal({ userId, onClose }: Props) {
   const { data: assets } = useQuery({ queryKey: ['avatarAssets'], queryFn: getAvatarAssets });
   const [connectState, setConnectState] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [moderationState, setModerationState] = useState<string | null>(null);
+
+  const blockMutation = useMutation({
+    mutationFn: blockUser,
+    onSuccess: () => setModerationState('User blocked. They can no longer reach you.'),
+    onError: () => setModerationState('Could not block. Try again.'),
+  });
+  const reportMutation = useMutation({
+    mutationFn: (reason: ReportReason) => reportUser(userId as string, reason),
+    onSuccess: () => {
+      setReportOpen(false);
+      setModerationState('Report sent. Thank you.');
+    },
+    onError: (e) =>
+      setModerationState(e instanceof ApiRequestError ? e.message : 'Could not send report.'),
+  });
+
+  const REPORT_REASONS: { value: ReportReason; label: string }[] = [
+    { value: 'HARASSMENT', label: 'Harassment' },
+    { value: 'SEXUAL_CONTENT', label: 'Sexual content' },
+    { value: 'HATE_SPEECH', label: 'Hate speech' },
+    { value: 'SPAM', label: 'Spam' },
+    { value: 'FAKE_PROFILE', label: 'Fake profile' },
+    { value: 'UNDERAGE', label: 'Underage' },
+    { value: 'THREATS', label: 'Threats' },
+    { value: 'OTHER', label: 'Other' },
+  ];
   const connectMutation = useMutation({
     mutationFn: requestConnection,
     onSuccess: () => setConnectState('Request sent ✓'),
@@ -102,6 +132,39 @@ export function UserProfileModal({ userId, onClose }: Props) {
             {connectState ? <Text style={styles.actionSoon}>{connectState}</Text> : null}
           </Pressable>
 
+          {reportOpen ? (
+            <View style={styles.reportBox}>
+              <Text style={styles.reportTitle}>Why are you reporting this user?</Text>
+              <View style={styles.reportReasons}>
+                {REPORT_REASONS.map((r) => (
+                  <Pressable
+                    key={r.value}
+                    style={styles.reasonChip}
+                    onPress={() => !reportMutation.isPending && reportMutation.mutate(r.value)}
+                  >
+                    <Text style={styles.reasonText}>{r.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          <View style={styles.moderationRow}>
+            <Pressable
+              style={styles.moderationButton}
+              onPress={() => userId && !blockMutation.isPending && blockMutation.mutate(userId)}
+            >
+              <Text style={styles.moderationText}>Block</Text>
+            </Pressable>
+            <Pressable
+              style={styles.moderationButton}
+              onPress={() => setReportOpen((v) => !v)}
+            >
+              <Text style={styles.moderationText}>Report</Text>
+            </Pressable>
+          </View>
+          {moderationState ? <Text style={styles.moderationState}>{moderationState}</Text> : null}
+
           <Pressable onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeText}>Close</Text>
           </Pressable>
@@ -158,6 +221,35 @@ const styles = StyleSheet.create({
   languageChipText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
   connectAction: { marginTop: spacing.sm },
+  reportBox: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 14,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  reportTitle: { color: colors.text, fontSize: 13, fontWeight: '700', marginBottom: spacing.sm },
+  reportReasons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  reasonChip: {
+    backgroundColor: colors.surface,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  reasonText: { color: colors.textMuted, fontSize: 11.5, fontWeight: '700' },
+  moderationRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.lg,
+    marginTop: spacing.md,
+  },
+  moderationButton: { padding: spacing.xs },
+  moderationText: { color: colors.error, fontSize: 12.5, fontWeight: '700' },
+  moderationState: {
+    color: colors.textMuted,
+    fontSize: 11.5,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
   action: {
     flex: 1,
     backgroundColor: colors.surfaceLight,

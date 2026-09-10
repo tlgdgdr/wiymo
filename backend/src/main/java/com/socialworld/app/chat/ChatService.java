@@ -6,6 +6,7 @@ import com.socialworld.app.chat.dto.MessageResponse;
 import com.socialworld.app.chat.ws.ChatSessionRegistry;
 import com.socialworld.app.common.exception.ApiException;
 import com.socialworld.app.common.exception.ErrorCode;
+import com.socialworld.app.moderation.BlockService;
 import com.socialworld.app.user.User;
 import com.socialworld.app.user.UserRepository;
 import com.socialworld.app.user.UserStatus;
@@ -33,6 +34,7 @@ public class ChatService {
     private final UserRepository userRepository;
     private final AvatarService avatarService;
     private final ChatSessionRegistry sessionRegistry;
+    private final BlockService blockService;
 
     /**
      * Persists a message and pushes it to both participants' live sockets.
@@ -43,6 +45,7 @@ public class ChatService {
         if (senderId.equals(receiverId)) {
             throw new ApiException(ErrorCode.SELF_ACTION_NOT_ALLOWED, "You cannot message yourself.");
         }
+        blockService.assertInteractionAllowed(senderId, receiverId);
         String content = sanitize(rawContent);
         if (content.isEmpty()) {
             throw new ApiException(ErrorCode.VALIDATION_ERROR, "Message cannot be empty.");
@@ -87,6 +90,8 @@ public class ChatService {
             return List.of();
         }
 
+        java.util.Set<UUID> blocked = blockService.blockedPartnerIds(userId);
+
         Map<UUID, Long> unread = messageRepository.countUnreadBySender(userId).stream()
                 .collect(Collectors.toMap(row -> (UUID) row[0], row -> (Long) row[1]));
 
@@ -100,7 +105,8 @@ public class ChatService {
         for (Message message : latest) {
             UUID partnerId = partnerOf(message, userId);
             User partner = partners.get(partnerId);
-            if (partner == null || partner.getStatus() != UserStatus.ACTIVE) {
+            if (partner == null || partner.getStatus() != UserStatus.ACTIVE
+                    || blocked.contains(partnerId)) {
                 continue;
             }
             byPartner.put(partnerId, new ConversationResponse(
@@ -121,7 +127,7 @@ public class ChatService {
         return message.getSenderId().equals(userId) ? message.getReceiverId() : message.getSenderId();
     }
 
-    static String sanitize(String content) {
+    public static String sanitize(String content) {
         if (content == null) {
             return "";
         }

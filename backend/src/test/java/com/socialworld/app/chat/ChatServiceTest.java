@@ -38,6 +38,8 @@ class ChatServiceTest {
     private AvatarService avatarService;
     @Mock
     private ChatSessionRegistry sessionRegistry;
+    @Mock
+    private com.socialworld.app.moderation.BlockService blockService;
 
     @InjectMocks
     private ChatService chatService;

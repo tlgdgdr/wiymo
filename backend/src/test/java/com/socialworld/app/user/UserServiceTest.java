@@ -32,6 +32,8 @@ class UserServiceTest {
     private UserLanguageService userLanguageService;
     @Mock
     private com.socialworld.app.avatar.AvatarService avatarService;
+    @Mock
+    private com.socialworld.app.moderation.BlockService blockService;
 
     @InjectMocks
     private UserService userService;
@@ -64,7 +66,7 @@ class UserServiceTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(userLanguageService.listForUser(any())).thenReturn(List.of());
 
-        PublicProfileResponse profile = userService.getPublicProfile(user.getId());
+        PublicProfileResponse profile = userService.getPublicProfile(java.util.UUID.randomUUID(), user.getId());
 
         assertThat(profile.age()).isEqualTo(25);
         assertThat(profile.username()).isEqualTo("alice");
@@ -80,7 +82,7 @@ class UserServiceTest {
         User user = user(UserStatus.SUSPENDED);
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
 
-        assertThatThrownBy(() -> userService.getPublicProfile(user.getId()))
+        assertThatThrownBy(() -> userService.getPublicProfile(java.util.UUID.randomUUID(), user.getId()))
                 .isInstanceOf(ApiException.class)
                 .extracting(e -> ((ApiException) e).getCode())
                 .isEqualTo(ErrorCode.RESOURCE_NOT_FOUND);

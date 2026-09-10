@@ -40,6 +40,8 @@ class DiscoveryServiceTest {
     private RoomPresenceRepository roomPresenceRepository;
     @Mock
     private AvatarService avatarService;
+    @Mock
+    private com.socialworld.app.moderation.BlockService blockService;
 
     @InjectMocks
     private DiscoveryService discoveryService;

@@ -4,6 +4,7 @@ import com.socialworld.app.avatar.AvatarService;
 import com.socialworld.app.common.exception.ApiException;
 import com.socialworld.app.common.exception.ErrorCode;
 import com.socialworld.app.friendship.dto.ConnectionResponse;
+import com.socialworld.app.moderation.BlockService;
 import com.socialworld.app.user.User;
 import com.socialworld.app.user.UserRepository;
 import com.socialworld.app.user.UserStatus;
@@ -24,12 +25,14 @@ public class ConnectionService {
     private final ConnectionRepository connectionRepository;
     private final UserRepository userRepository;
     private final AvatarService avatarService;
+    private final BlockService blockService;
 
     @Transactional
     public ConnectionResponse request(UUID requesterId, UUID addresseeId) {
         if (requesterId.equals(addresseeId)) {
             throw new ApiException(ErrorCode.SELF_ACTION_NOT_ALLOWED, "You cannot connect with yourself.");
         }
+        blockService.assertInteractionAllowed(requesterId, addresseeId);
         User addressee = userRepository.findById(addresseeId)
                 .filter(u -> u.getStatus() == UserStatus.ACTIVE)
                 .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "User not found."));

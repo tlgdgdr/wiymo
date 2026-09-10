@@ -35,6 +35,8 @@ class ConnectionServiceTest {
     private UserRepository userRepository;
     @Mock
     private AvatarService avatarService;
+    @Mock
+    private com.socialworld.app.moderation.BlockService blockService;
 
     @InjectMocks
     private ConnectionService connectionService;

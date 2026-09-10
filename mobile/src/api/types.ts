@@ -217,6 +217,16 @@ export interface DiscoveredUser {
   score: number;
 }
 
+export type ReportReason =
+  | 'HARASSMENT'
+  | 'SEXUAL_CONTENT'
+  | 'HATE_SPEECH'
+  | 'SPAM'
+  | 'FAKE_PROFILE'
+  | 'UNDERAGE'
+  | 'THREATS'
+  | 'OTHER';
+
 export interface AddLanguageRequest {
   languageCode: string;
   type: LanguageType;

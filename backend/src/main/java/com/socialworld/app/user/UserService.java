@@ -5,6 +5,7 @@ import com.socialworld.app.common.exception.ApiException;
 import com.socialworld.app.common.exception.ErrorCode;
 import com.socialworld.app.intention.Intention;
 import com.socialworld.app.language.UserLanguageService;
+import com.socialworld.app.moderation.BlockService;
 import com.socialworld.app.user.dto.MeResponse;
 import com.socialworld.app.user.dto.PublicProfileResponse;
 import com.socialworld.app.user.dto.UpdateProfileRequest;
@@ -21,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserLanguageService userLanguageService;
     private final AvatarService avatarService;
+    private final BlockService blockService;
 
     @Transactional(readOnly = true)
     public MeResponse getMe(UUID userId) {
@@ -51,7 +53,10 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public PublicProfileResponse getPublicProfile(UUID id) {
+    public PublicProfileResponse getPublicProfile(UUID viewerId, UUID id) {
+        if (!viewerId.equals(id) && blockService.isBlockedEitherWay(viewerId, id)) {
+            throw new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "User not found.");
+        }
         User user = userRepository.findById(id)
                 .filter(u -> u.getStatus() == UserStatus.ACTIVE)
                 .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "User not found."));

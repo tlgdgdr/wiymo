@@ -47,6 +47,8 @@ class GiftServiceTest {
     private ChatService chatService;
     @Mock
     private ChatSessionRegistry sessionRegistry;
+    @Mock
+    private com.socialworld.app.moderation.BlockService blockService;
 
     @InjectMocks
     private GiftService giftService;

@@ -43,7 +43,11 @@ public enum ErrorCode {
     INSUFFICIENT_BALANCE(HttpStatus.UNPROCESSABLE_ENTITY, "Not enough coins."),
 
     // Connections
-    CONNECTION_ALREADY_EXISTS(HttpStatus.CONFLICT, "A connection with this user already exists.");
+    CONNECTION_ALREADY_EXISTS(HttpStatus.CONFLICT, "A connection with this user already exists."),
+
+    // Moderation — neutral wording so it never reveals who blocked whom
+    USER_UNAVAILABLE(HttpStatus.FORBIDDEN, "You cannot interact with this user."),
+    REPORT_ALREADY_OPEN(HttpStatus.CONFLICT, "You already have an open report for this user.");
 
     private final HttpStatus status;
     private final String defaultMessage;
