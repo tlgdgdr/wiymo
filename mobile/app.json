@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "SocialWorld",
+    "slug": "socialworld",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "socialworld",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#17131f",
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.socialworld.app"
+    },
+    "extra": {
+      "apiUrl": "http://localhost:8080"
+    }
+  }
+}
