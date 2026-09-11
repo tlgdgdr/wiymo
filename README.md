@@ -138,11 +138,19 @@ Splash · Login · Register · Home (intention cards + recommendations) · Room 
 (avatars at slots) · User Profile modal (chat/gift/connect/block/report) · Chat List ·
 Private Chat · Gift Selector · Avatar Creator · Profile · Edit Profile · Languages · Settings
 
-## Placeholder art
+## Art
 
-Avatar layers, room backgrounds and gift icons are placeholder URLs (`placehold.co`). When
-real art lands (transparent PNGs on a shared canvas per avatar category; 1080×1920 room
-scenes), only the URLs in the `avatar_assets`, `rooms` and `gifts` tables change.
+Midnight Cafe runs on real art: `backend/src/main/resources/static/rooms/cafe.jpg`, served
+unauthenticated, with a 10-seat slot map matched to the furniture in the scene. Everything
+else (avatar layers, the other four room backgrounds, gift icons) is still a `placehold.co`
+URL.
+
+To add more art: drop the file in `static/rooms/` (or `static/avatars/`, `static/gifts/`)
+and write a migration that points the row at it. Asset URLs may be **relative**
+(`/rooms/cafe.jpg`) — the mobile client resolves them against its API base, so one row works
+in every environment. Room scenes are vertical (9:16, ~1080×1920) and belong as JPG rather
+than PNG; a room's seating lives in `room_slots` as percentages, so matching seats to new
+furniture is a data change, never a code change.
 
 ## Never commit secrets
 
