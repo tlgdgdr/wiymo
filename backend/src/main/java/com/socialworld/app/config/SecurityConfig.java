@@ -52,6 +52,10 @@ public class SecurityConfig {
                                 "/privacy.html",
                                 "/terms.html",
                                 "/legal.css",
+                                // Static art assets (room backgrounds, avatar layers, gift icons)
+                                "/rooms/**",
+                                "/avatars/**",
+                                "/gifts/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

@@ -15,6 +15,7 @@ import { getAvatarAssets } from '@/api/avatar';
 import { getRoom, getRoomUsers, joinRoom, leaveRoom } from '@/api/rooms';
 import { Avatar } from '@/components/Avatar';
 import { UserProfileModal } from '@/components/UserProfileModal';
+import { resolveAssetUrl } from '@/config';
 import { useAuthStore } from '@/store/auth';
 import { colors, spacing } from '@/theme';
 
@@ -82,7 +83,7 @@ export default function RoomScreen() {
       </View>
 
       <ImageBackground
-        source={{ uri: detail?.room.backgroundImageUrl }}
+        source={{ uri: resolveAssetUrl(detail?.room.backgroundImageUrl) }}
         style={styles.stage}
         onLayout={onStageLayout}
       >

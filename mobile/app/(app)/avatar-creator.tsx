@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAvatarAssets, getMyAvatar, updateMyAvatar } from '@/api/avatar';
 import { ApiRequestError } from '@/api/client';
 import type { AvatarCategory, UserAvatar } from '@/api/types';
+import { resolveAssetUrl } from '@/config';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { colors, spacing } from '@/theme';
@@ -112,7 +113,7 @@ export default function AvatarCreatorScreen() {
                       onPress={() => toggleLayer(category, asset.assetKey)}
                       style={[styles.assetCard, selected && styles.assetCardSelected]}
                     >
-                      <Image source={{ uri: asset.imageUrl }} style={styles.assetImage} />
+                      <Image source={{ uri: resolveAssetUrl(asset.imageUrl) }} style={styles.assetImage} />
                       <Text style={styles.assetName} numberOfLines={1}>
                         {asset.displayName}
                       </Text>

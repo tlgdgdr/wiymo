@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import type { AvatarAsset, UserAvatar } from '@/api/types';
+import { resolveAssetUrl } from '@/config';
 import { colors } from '@/theme';
 
 /** Layer render order, bottom to top. */
@@ -34,7 +35,7 @@ export function Avatar({ avatar, assets, size, fallbackInitial }: Props) {
   const urlByKey = useMemo(() => {
     const map = new Map<string, string>();
     for (const asset of assets ?? []) {
-      map.set(asset.assetKey, asset.imageUrl);
+      map.set(asset.assetKey, resolveAssetUrl(asset.imageUrl) as string);
     }
     return map;
   }, [assets]);

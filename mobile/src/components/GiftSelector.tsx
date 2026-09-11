@@ -5,6 +5,7 @@ import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ApiRequestError } from '@/api/client';
 import { getMyWallet, listGifts, sendGift } from '@/api/gifts';
 import type { Message } from '@/api/types';
+import { resolveAssetUrl } from '@/config';
 import { colors, spacing } from '@/theme';
 
 interface Props {
@@ -61,7 +62,7 @@ export function GiftSelector({ visible, receiverId, onClose }: Props) {
                   onPress={() => setSelectedGiftId(isSelected ? null : gift.id)}
                   style={[styles.giftCard, isSelected && styles.giftCardSelected]}
                 >
-                  <Image source={{ uri: gift.iconUrl }} style={styles.giftIcon} />
+                  <Image source={{ uri: resolveAssetUrl(gift.iconUrl) }} style={styles.giftIcon} />
                   <Text style={styles.giftName}>{gift.name}</Text>
                   <Text style={styles.giftPrice}>🪙 {gift.coinPrice}</Text>
                 </Pressable>

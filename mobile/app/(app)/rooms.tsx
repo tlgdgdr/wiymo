@@ -5,6 +5,7 @@ import { FlatList, ImageBackground, Pressable, StyleSheet, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { listRooms } from '@/api/rooms';
+import { resolveAssetUrl } from '@/config';
 import { getMe } from '@/api/users';
 import { intentionEmoji, intentionLabel } from '@/constants/intentions';
 import { colors, spacing } from '@/theme';
@@ -43,7 +44,7 @@ export default function RoomListScreen() {
         renderItem={({ item: room }) => (
           <Pressable onPress={() => router.push(`/(app)/room/${room.id}`)}>
             <ImageBackground
-              source={{ uri: room.backgroundImageUrl }}
+              source={{ uri: resolveAssetUrl(room.backgroundImageUrl) }}
               style={styles.card}
               imageStyle={styles.cardImage}
             >
