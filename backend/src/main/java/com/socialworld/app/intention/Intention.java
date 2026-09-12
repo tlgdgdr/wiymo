@@ -10,5 +10,6 @@ public enum Intention {
     FLIRT,
     MEET_PEOPLE,
     LANGUAGE_EXCHANGE,
+    PLAY_GAMES,
     CHILL
 }

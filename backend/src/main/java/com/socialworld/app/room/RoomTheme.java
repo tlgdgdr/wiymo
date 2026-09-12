@@ -5,5 +5,6 @@ public enum RoomTheme {
     LOUNGE,
     NIGHT,
     LANGUAGE,
+    GAME,
     CASUAL
 }

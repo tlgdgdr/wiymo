@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,21 +35,11 @@ export default function ProfileScreen() {
           <Text style={styles.cardBody}>{me?.countryCode ?? 'Not set'}</Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Languages</Text>
-          {me?.languages.length ? (
-            me.languages.map((lang) => (
-              <Text key={lang.id} style={styles.cardBody}>
-                {lang.languageCode.toUpperCase()} · {lang.type.toLowerCase()} · {lang.level}
-              </Text>
-            ))
-          ) : (
-            <Text style={styles.cardBody}>No languages added.</Text>
-          )}
-          <Link href="/(app)/languages" style={styles.link}>
-            Manage languages
-          </Link>
-        </View>
+        {/*
+          Languages are hidden for the MVP launch. The screen, the API and the
+          data all still work — restoring the feature is putting this card and
+          the Settings row back.
+        */}
 
         <View style={styles.actions}>
           <Button title="Edit avatar" onPress={() => router.push('/(app)/avatar-creator')} />
@@ -86,6 +76,5 @@ const styles = StyleSheet.create({
   },
   cardTitle: { color: colors.textMuted, fontSize: 12, fontWeight: '700', marginBottom: spacing.xs },
   cardBody: { color: colors.text, fontSize: 15, marginBottom: 2 },
-  link: { color: colors.primary, fontWeight: '700', marginTop: spacing.sm },
   actions: { marginTop: spacing.md, gap: spacing.sm },
 });

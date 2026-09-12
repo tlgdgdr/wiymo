@@ -6,6 +6,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { getAvatarAssets } from '@/api/avatar';
 import { ApiRequestError } from '@/api/client';
 import { requestConnection } from '@/api/connections';
+import { inviteToGame } from '@/api/games';
 import { blockUser, reportUser } from '@/api/moderation';
 import type { ReportReason } from '@/api/types';
 import { getPublicProfile } from '@/api/users';
@@ -27,6 +28,17 @@ export function UserProfileModal({ userId, onClose }: Props) {
   const [connectState, setConnectState] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [moderationState, setModerationState] = useState<string | null>(null);
+  const [gameState, setGameState] = useState<string | null>(null);
+
+  const gameMutation = useMutation({
+    mutationFn: (opponentId: string) => inviteToGame(opponentId),
+    onSuccess: () => {
+      onClose();
+      router.push('/(app)/game');
+    },
+    onError: (e) =>
+      setGameState(e instanceof ApiRequestError ? e.message : 'Could not start a game.'),
+  });
 
   const blockMutation = useMutation({
     mutationFn: blockUser,
@@ -124,13 +136,22 @@ export function UserProfileModal({ userId, onClose }: Props) {
             </Pressable>
           </View>
 
-          <Pressable
-            style={[styles.action, styles.connectAction]}
-            onPress={() => userId && !connectMutation.isPending && connectMutation.mutate(userId)}
-          >
-            <Text style={styles.actionText}>🤝 Connect</Text>
-            {connectState ? <Text style={styles.actionSoon}>{connectState}</Text> : null}
-          </Pressable>
+          <View style={styles.actions}>
+            <Pressable
+              style={styles.action}
+              onPress={() => userId && !connectMutation.isPending && connectMutation.mutate(userId)}
+            >
+              <Text style={styles.actionText}>🤝 Connect</Text>
+              {connectState ? <Text style={styles.actionSoon}>{connectState}</Text> : null}
+            </Pressable>
+            <Pressable
+              style={styles.action}
+              onPress={() => userId && !gameMutation.isPending && gameMutation.mutate(userId)}
+            >
+              <Text style={styles.actionText}>🎲 Play</Text>
+              {gameState ? <Text style={styles.actionSoon}>{gameState}</Text> : null}
+            </Pressable>
+          </View>
 
           {reportOpen ? (
             <View style={styles.reportBox}>

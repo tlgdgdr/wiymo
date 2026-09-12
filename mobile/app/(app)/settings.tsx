@@ -64,8 +64,8 @@ export default function SettingsScreen() {
             <Text style={styles.chevron}>›</Text>
           </Pressable>
           <View style={styles.divider} />
-          <Pressable style={styles.row} onPress={() => router.push('/(app)/languages')}>
-            <Text style={styles.rowText}>My languages</Text>
+          <Pressable style={styles.row} onPress={() => router.push('/(app)/game')}>
+            <Text style={styles.rowText}>Games</Text>
             <Text style={styles.chevron}>›</Text>
           </Pressable>
         </View>

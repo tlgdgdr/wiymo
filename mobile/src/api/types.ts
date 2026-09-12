@@ -29,6 +29,7 @@ export type Intention =
   | 'FLIRT'
   | 'MEET_PEOPLE'
   | 'LANGUAGE_EXCHANGE'
+  | 'PLAY_GAMES'
   | 'CHILL';
 
 export type LanguageType = 'NATIVE' | 'LEARNING' | 'SPEAKING';
@@ -231,4 +232,23 @@ export interface AddLanguageRequest {
   languageCode: string;
   type: LanguageType;
   level?: LanguageLevel;
+}
+
+export type GameType = 'TIC_TAC_TOE';
+
+export type GameStatus = 'PENDING' | 'ACTIVE' | 'FINISHED' | 'DECLINED' | 'ABANDONED';
+
+export interface GameState {
+  id: string;
+  gameType: GameType;
+  status: GameStatus;
+  challengerId: string;
+  challengerUsername: string;
+  opponentId: string;
+  opponentUsername: string;
+  turnUserId: string | null;
+  winnerId: string | null;
+  draw: boolean;
+  /** Nine characters, '.' empty, 'X' challenger, 'O' opponent. */
+  board: string;
 }

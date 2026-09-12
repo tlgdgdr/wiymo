@@ -42,6 +42,12 @@ public enum ErrorCode {
     // Wallet / gifts
     INSUFFICIENT_BALANCE(HttpStatus.UNPROCESSABLE_ENTITY, "Not enough coins."),
 
+    // Games
+    GAME_ALREADY_IN_PROGRESS(HttpStatus.CONFLICT, "You already have a game in progress."),
+    GAME_NOT_PLAYABLE(HttpStatus.CONFLICT, "This game is not in play."),
+    NOT_YOUR_TURN(HttpStatus.CONFLICT, "It is not your turn."),
+    INVALID_MOVE(HttpStatus.UNPROCESSABLE_ENTITY, "That move is not allowed."),
+
     // Connections
     CONNECTION_ALREADY_EXISTS(HttpStatus.CONFLICT, "A connection with this user already exists."),
 

@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getAvatarAssets } from '@/api/avatar';
 import { discoverUsers } from '@/api/discovery';
+import { listMyGames } from '@/api/games';
 import { getMyWallet } from '@/api/gifts';
 import { listRooms } from '@/api/rooms';
 import type { Intention, Me } from '@/api/types';
@@ -20,6 +21,7 @@ export default function HomeScreen() {
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe });
   const { data: assets } = useQuery({ queryKey: ['avatarAssets'], queryFn: getAvatarAssets });
   const { data: wallet } = useQuery({ queryKey: ['wallet'], queryFn: getMyWallet });
+  const { data: games } = useQuery({ queryKey: ['games'], queryFn: listMyGames });
   const current = me?.currentIntention ?? null;
   const { data: recommendedRooms } = useQuery({
     queryKey: ['recommendations', 'rooms', current],
@@ -60,6 +62,9 @@ export default function HomeScreen() {
             <Text style={styles.username}>{me?.username ?? '...'}</Text>
             <Text style={styles.headerSub}>🪙 {wallet?.coinBalance ?? '...'}</Text>
           </View>
+          <Link href="/(app)/game" style={styles.profileLink}>
+            {games && games.length > 0 ? '🎲 •' : '🎲'}
+          </Link>
           <Link href="/(app)/chats" style={styles.profileLink}>
             Chats
           </Link>

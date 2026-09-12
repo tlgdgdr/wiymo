@@ -69,13 +69,13 @@ public class LocalDemoDataSeeder implements CommandLineRunner {
 
         List<Demo> demos = List.of(
                 new Demo("mira", 26, "TR", Intention.DEEP_TALK, "Gece insanıyım. Kahve ve uzun sohbetler.", "tr", "en", LanguageType.SPEAKING, "body_01", "hair_02", "top_01"),
-                new Demo("leo", 29, "ES", Intention.LANGUAGE_EXCHANGE, "Learning Turkish, teaching Spanish!", "es", "tr", LanguageType.LEARNING, "body_02", "hair_04", "top_02"),
+                new Demo("leo", 29, "ES", Intention.PLAY_GAMES, "Undefeated at tic-tac-toe. Prove me wrong.", "es", "tr", LanguageType.LEARNING, "body_02", "hair_04", "top_02"),
                 new Demo("ada", 24, "GB", Intention.CHILL, "Just here to vibe.", "en", null, null, "body_03", "hair_03", "top_03"),
                 new Demo("nova", 31, "DE", Intention.FLIRT, "Ask me about my dog.", "de", "en", LanguageType.SPEAKING, "body_01", "hair_02", "top_02"),
                 new Demo("kenji", 27, "JP", Intention.MEET_PEOPLE, "New in town, say hi!", "ja", "en", LanguageType.LEARNING, "body_02", "hair_01", "top_01"),
                 new Demo("sofia", 23, "IT", Intention.CASUAL_CHAT, "Espresso opinions, strongly held.", "it", "en", LanguageType.SPEAKING, "body_01", "hair_02", "top_03"),
                 new Demo("omar", 33, "EG", Intention.DEEP_TALK, "Philosophy and football.", "ar", "en", LanguageType.SPEAKING, "body_03", "hair_04", "top_01"),
-                new Demo("lena", 28, "PL", Intention.LANGUAGE_EXCHANGE, "Polish native, happy to help learners!", "pl", "tr", LanguageType.LEARNING, "body_01", "hair_03", "top_02"),
+                new Demo("lena", 28, "PL", Intention.PLAY_GAMES, "One more round, then I really am going to bed.", "pl", "tr", LanguageType.LEARNING, "body_01", "hair_03", "top_02"),
                 new Demo("marco", 30, "BR", Intention.CHILL, "Music, memes, mate.", "pt", "en", LanguageType.SPEAKING, "body_02", "hair_01", "top_03"),
                 new Demo("yuki", 25, "JP", Intention.FLIRT, "Cat person. Non-negotiable.", "ja", "en", LanguageType.SPEAKING, "body_01", "hair_02", "top_01"));
 

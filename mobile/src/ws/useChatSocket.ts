@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
-import type { Message } from '@/api/types';
+import type { GameState, Message } from '@/api/types';
 import { API_URL } from '@/config';
 import { useAuthStore } from '@/store/auth';
 
@@ -51,6 +51,17 @@ export function useChatSocket() {
             void queryClient.invalidateQueries({ queryKey: ['conversations'] });
           } else if (parsed.type === 'gift') {
             void queryClient.invalidateQueries({ queryKey: ['wallet'] });
+          } else if (parsed.type === 'game.state') {
+            // The server pushes the whole game, so the board is authoritative
+            // here — no refetch, and both players stay in step.
+            const game = parsed.payload as GameState;
+            // Finished games stay in the cache so the result is still on
+            // screen; the next refetch drops them, since the server only
+            // returns live ones.
+            queryClient.setQueryData<GameState[]>(['games'], (old: GameState[] | undefined) => [
+              game,
+              ...(old ?? []).filter((g: GameState) => g.id !== game.id),
+            ]);
           }
         } catch {
           // Ignore malformed frames.
@@ -77,14 +88,20 @@ export function useChatSocket() {
     };
   }, [accessToken, myUserId, queryClient]);
 
-  const sendViaSocket = (receiverId: string, content: string): boolean => {
+  const send = (frame: object): boolean => {
     const socket = socketRef.current;
     if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type: 'chat.send', receiverId, content }));
+      socket.send(JSON.stringify(frame));
       return true;
     }
     return false;
   };
 
-  return { sendViaSocket };
+  const sendViaSocket = (receiverId: string, content: string): boolean =>
+    send({ type: 'chat.send', receiverId, content });
+
+  const sendMoveViaSocket = (gameId: string, cell: number): boolean =>
+    send({ type: 'game.move', gameId, cell });
+
+  return { sendViaSocket, sendMoveViaSocket };
 }

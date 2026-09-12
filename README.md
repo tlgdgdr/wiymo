@@ -23,6 +23,7 @@ rooms, appear as layered 2D avatars, chat in real time, and send virtual gifts.
 | Auth | Register (18+ enforced), login by username/email, JWT + rotating hashed refresh tokens, rate-limited auth endpoints, BCrypt |
 | Profiles | Bio/country/gender, public profiles expose age (never birth date or email) |
 | Intentions | 6 moods, changeable anytime; drives room and people recommendations |
+| Games | 1v1 tic-tac-toe in the Game Room: invite, accept, live moves over the socket, quitting or dropping hands the win over |
 | Languages | NATIVE/LEARNING/SPEAKING with CEFR levels |
 | Avatars | Layered 2D system (8 categories), asset catalog with premium fields, creator UI |
 | Rooms | 5 themed rooms, percent-based seat slots with depth scaling, one-room-at-a-time presence enforced by schema |
@@ -32,12 +33,19 @@ rooms, appear as layered 2D avatars, chat in real time, and send virtual gifts.
 | Connections | Request/accept/reject, duplicate-proof in both directions |
 | Moderation | Block (cuts chat/gifts/profiles/discovery/rooms both ways, neutral errors), report with 8 reasons |
 
-Backend: 84 unit tests. Full architecture notes below.
+Backend: 111 unit tests. Full architecture notes below.
+
+**Hidden for launch:** language exchange (the module, API, screen and schema are
+all intact — the mood was dropped from the Home screen, the Language Corner room
+deactivated and the Settings row swapped for Games). Turning it back on is
+undoing those three edits, not rebuilding a feature.
 
 ## Prerequisites
 
 - Java 21, Maven 3.9+
-- Docker (for PostgreSQL)
+- PostgreSQL 16 — either Docker, or a local install
+  (macOS: `brew install postgresql@16 && brew services start postgresql@16`, then
+  `createuser -s socialworld && createdb -O socialworld socialworld`)
 - Node 18+ / npm
 - Expo Go app on a phone, or an emulator
 
@@ -50,7 +58,8 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
 - API: http://localhost:8080 — Swagger UI: http://localhost:8080/swagger-ui.html
-- Flyway migrations (V1–V8) run automatically; they seed 5 rooms, 24 avatar assets and 5 gifts.
+- Flyway migrations (V1–V14) run automatically; they seed 5 active rooms, 24 avatar assets
+  and 5 gifts.
 - The **local profile also seeds 10 demo users** — log in as `mira`, `leo`, `ada`, `nova`,
   `kenji`, `sofia`, `omar`, `lena`, `marco` or `yuki`, password `password123`. Half are
   "online" and already sitting in rooms, with languages, avatars and a starter conversation.
@@ -100,7 +109,13 @@ Key decisions:
   `RateLimiter` abstraction (swap in Redis later).
 - **Real-time**: a clean JSON protocol over a raw WebSocket at `/ws/chat?token=...`
   (no STOMP — zero extra mobile dependencies). `ChatSessionRegistry` decouples push from the
-  handler, so chat and gifts share it. Offline users simply catch up over REST.
+  handler, so chat, gifts and games share it. Offline users simply catch up over REST.
+- **Games are server-authoritative**: clients send intents (`{"type":"game.move","cell":4}`),
+  never state. Every rule lives in a pure engine (`TicTacToe`) that the service calls under a
+  row lock, so simultaneous moves cannot corrupt a board and a tampered client only gets an
+  error back. `game_sessions.state` is opaque to everything but its engine — tombala and okey
+  are a new engine, not a new table. Losing your last socket forfeits your live games, so no
+  one waits on a turn that will never come.
 - **Invariants live in the schema where possible**: one room per user (`room_presence.user_id`
   is the PK), no double-seating (unique room+slot), non-negative wallets (CHECK constraint),
   one live connection per pair (partial unique index).
@@ -126,6 +141,7 @@ paid cosmetics, animated gifts) are already in the code but deliberately unbuilt
 | Rooms | `GET /api/rooms[?intention=]` · `GET /api/rooms/{id}` · `POST .../join` · `POST .../leave` · `GET .../users` |
 | Chat | `GET /api/conversations` · `GET/POST /api/conversations/{userId}/messages` · WS `/ws/chat?token=` |
 | Gifts | `GET /api/gifts` · `POST /api/gifts/send` · `GET /api/wallets/me` |
+| Games | `GET /api/games` · `POST /api/games` · `POST .../{id}/accept` · `decline` · `moves` · `forfeit` |
 | Discovery | `GET /api/discovery/users?intention&languageCode&countryCode&onlineOnly&ageMin&ageMax` |
 | Connections | `POST /api/connections/{userId}` · `POST .../{id}/accept` · `.../reject` · `GET /api/connections` |
 | Moderation | `POST/DELETE /api/users/{id}/block` · `POST /api/reports` |
@@ -135,8 +151,9 @@ Full request/response shapes: Swagger UI.
 ## Mobile screens
 
 Splash · Login · Register · Home (intention cards + recommendations) · Room List · Room
-(avatars at slots) · User Profile modal (chat/gift/connect/block/report) · Chat List ·
-Private Chat · Gift Selector · Avatar Creator · Profile · Edit Profile · Languages · Settings
+(avatars at slots) · User Profile modal (chat/gift/connect/play/block/report) · Chat List ·
+Private Chat · Gift Selector · Game · Avatar Creator · Profile · Edit Profile · Settings
+(Languages still exists at `/(app)/languages`, just unlinked)
 
 ## Art
 
